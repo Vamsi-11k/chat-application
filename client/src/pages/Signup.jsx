@@ -1,0 +1,149 @@
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Link, useNavigate } from 'react-router-dom';
+import { MessageSquare, User, Mail, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { FormInput } from '../components/FormInput';
+import { Spinner } from '../components/Loader';
+
+const signupSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, 'Username must be at least 3 characters')
+      .max(30, 'Username cannot exceed 30 characters')
+      .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores are allowed'),
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .email('Please provide a valid email address'),
+    password: z
+      .string()
+      .min(6, 'Password must be at least 6 characters long'),
+    confirmPassword: z
+      .string()
+      .min(1, 'Please confirm your password')
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword']
+  });
+
+export const Signup = () => {
+  const { signup } = useAuth();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: zodResolver(signupSchema)
+  });
+
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    const res = await signup(data);
+    setIsSubmitting(false);
+    if (res.success) {
+      navigate('/');
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-950">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-inner">
+            <MessageSquare size={28} />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+            Create an account
+          </h1>
+          <p className="text-xs text-slate-400">
+            Join the conversation with instant, real-time messaging
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+          <FormInput
+            id="username"
+            label="Username"
+            type="text"
+            placeholder="johndoe"
+            icon={User}
+            register={register('username')}
+            error={errors.username}
+            disabled={isSubmitting}
+          />
+
+          <FormInput
+            id="email"
+            label="Email Address"
+            type="email"
+            placeholder="you@example.com"
+            icon={Mail}
+            register={register('email')}
+            error={errors.email}
+            disabled={isSubmitting}
+          />
+
+          <FormInput
+            id="password"
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            icon={Lock}
+            register={register('password')}
+            error={errors.password}
+            disabled={isSubmitting}
+          />
+
+          <FormInput
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            placeholder="••••••••"
+            icon={Lock}
+            register={register('confirmPassword')}
+            error={errors.confirmPassword}
+            disabled={isSubmitting}
+          />
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full mt-3 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all duration-150 shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Spinner size={18} />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              <span>Create Account</span>
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <div className="text-center pt-2 border-t border-slate-800">
+          <p className="text-xs text-slate-400">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
