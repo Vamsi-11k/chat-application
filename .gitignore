@@ -26,3 +26,7 @@ yarn-error.log*
 Thumbs.db
 .vscode
 .idea
+git.ps1
+git.cmd
+push_to_github.bat
+
