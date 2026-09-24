@@ -21,6 +21,7 @@ export const getCookieOptions = (isRefresh = false) => {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
     maxAge: isRefresh ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000 // 7 days or 15 mins
   };
 };

@@ -57,7 +57,8 @@ export const signup = asyncHandler(async (req, res) => {
     message: 'User registered successfully',
     data: {
       user: userResponse,
-      accessToken
+      accessToken,
+      refreshToken
     }
   });
 });
@@ -101,18 +102,35 @@ export const login = asyncHandler(async (req, res) => {
     message: 'Login successful',
     data: {
       user: userResponse,
-      accessToken
+      accessToken,
+      refreshToken
     }
   });
 });
 
 export const logout = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
   if (req.user) {
     await User.findByIdAndUpdate(req.user._id, {
       refreshToken: null,
       isOnline: false,
       lastSeen: new Date()
     });
+  } else if (refreshToken) {
+    try {
+      const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'refresh_default_secret_key_123';
+      const decoded = jwt.verify(refreshToken, refreshSecret);
+      if (decoded?.id) {
+        await User.findByIdAndUpdate(decoded.id, {
+          refreshToken: null,
+          isOnline: false,
+          lastSeen: new Date()
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   res.clearCookie('accessToken', getCookieOptions(false));
@@ -130,6 +148,10 @@ export const refresh = asyncHandler(async (req, res) => {
 
   if (!refreshToken && req.body?.refreshToken) {
     refreshToken = req.body.refreshToken;
+  }
+
+  if (!refreshToken && req.headers['x-refresh-token']) {
+    refreshToken = req.headers['x-refresh-token'];
   }
 
   if (!refreshToken) {
@@ -181,7 +203,8 @@ export const refresh = asyncHandler(async (req, res) => {
     message: 'Tokens refreshed successfully',
     data: {
       user: userResponse,
-      accessToken: newAccessToken
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
     }
   });
 });

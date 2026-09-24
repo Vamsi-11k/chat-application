@@ -19,16 +19,27 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: [
-      process.env.CLIENT_URL || 'http://localhost:5173',
-      'http://localhost:5173',
-      'http://localhost:3000'
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalized = origin.replace(/\/$/, '');
+      const isAllowed =
+        normalized === 'https://chat-application-tau-ashy.vercel.app' ||
+        normalized === (process.env.CLIENT_URL || '').trim().replace(/\/$/, '') ||
+        normalized.endsWith('.vercel.app') ||
+        normalized.includes('localhost') ||
+        normalized.includes('127.0.0.1');
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST', 'OPTIONS']
   },
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
+  transports: ['websocket', 'polling']
 });
 
 // Setup Socket events
@@ -39,7 +50,7 @@ server.listen(PORT, () => {
   console.log(`=========================================`);
   console.log(`🚀 Chat Server running in ${process.env.NODE_ENV || 'development'} mode`);
   console.log(`🌐 Server URL: http://localhost:${PORT}`);
-  console.log(`📱 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+  console.log(`📱 Client URL: ${process.env.CLIENT_URL || 'https://chat-application-tau-ashy.vercel.app'}`);
   console.log(`=========================================`);
 });
 

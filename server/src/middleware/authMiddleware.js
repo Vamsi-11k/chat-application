@@ -4,13 +4,15 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const protect = asyncHandler(async (req, res, next) => {
-  let token = req.cookies?.accessToken;
+  let token = null;
 
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies?.accessToken) {
+    token = req.cookies.accessToken;
   }
 
-  if (!token) {
+  if (!token || token === 'null' || token === 'undefined') {
     throw new ApiError(401, 'Authentication required. No token provided.');
   }
 

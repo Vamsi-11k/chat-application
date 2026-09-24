@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { getStoredAccessToken } from '../api/axios';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://chat-application-1xs8.onrender.com';
+  }
+  return 'http://localhost:5000';
+};
 
 export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
@@ -14,8 +23,14 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?._id) {
-      const newSocket = io(SOCKET_URL, {
+      const token = getStoredAccessToken();
+      const socketUrl = getSocketUrl();
+
+      const newSocket = io(socketUrl, {
         withCredentials: true,
+        auth: {
+          token
+        },
         transports: ['websocket', 'polling']
       });
 
@@ -23,7 +38,7 @@ export const SocketProvider = ({ children }) => {
       setSocket(newSocket);
 
       newSocket.on('connect', () => {
-        // Socket successfully authenticated via cookie
+        // Socket connected
       });
 
       newSocket.on('user_online', ({ userId }) => {
@@ -36,6 +51,10 @@ export const SocketProvider = ({ children }) => {
           next.delete(userId);
           return next;
         });
+      });
+
+      newSocket.on('connect_error', (err) => {
+        console.warn('Socket connection warning:', err.message);
       });
 
       return () => {
