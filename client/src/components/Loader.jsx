@@ -5,8 +5,8 @@ export const FullPageLoader = () => {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
       <div className="relative flex items-center justify-center">
-        <div className="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
-        <div className="absolute w-8 h-8 rounded-full bg-indigo-600/30 blur-md"></div>
+        <div className="w-16 h-16 rounded-full border-4 border-teal-500/20 border-t-teal-500 animate-spin"></div>
+        <div className="absolute w-8 h-8 rounded-full bg-teal-600/30 blur-md"></div>
       </div>
       <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400 tracking-wide animate-pulse">
         Connecting to Chat...

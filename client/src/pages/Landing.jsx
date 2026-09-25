@@ -220,42 +220,42 @@ export const Landing = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#faf6f0] via-[#f5eee4] to-[#ede3d4] dark:from-[#0e0705] dark:via-[#140b08] dark:to-[#1a0e0b] text-stone-900 dark:text-stone-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-300 relative overflow-x-hidden p-3 sm:p-6 md:p-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#f0fdfa] via-[#e6f7f4] to-[#ddf4ef] dark:from-[#031714] dark:via-[#072420] dark:to-[#0f3d37] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-teal-500 selection:text-white transition-colors duration-300 relative overflow-x-hidden p-3 sm:p-6 md:p-8">
       
-      {/* Background Soft Warm Atmospheric Gradients & Texture */}
+      {/* Background Soft Deep Teal Watercolor & Radial Glows */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        {/* Warm organic shapes in light mode */}
-        <div className="absolute -top-16 -right-16 w-[420px] sm:w-[540px] h-[420px] sm:h-[540px] bg-amber-200/35 dark:bg-transparent rounded-[60%_40%_30%_70%/60%_30%_70%_40%] blur-2xl transform rotate-12" />
-        <div className="absolute -bottom-24 -left-20 w-[380px] sm:w-[480px] h-[380px] sm:h-[480px] bg-orange-200/25 dark:bg-transparent rounded-[40%_60%_70%_30%/40%_40%_60%_60%] blur-3xl transform -rotate-6" />
+        {/* Soft mint wash shapes in light mode */}
+        <div className="absolute -top-16 -right-16 w-[420px] sm:w-[540px] h-[420px] sm:h-[540px] bg-teal-200/40 dark:bg-transparent rounded-[60%_40%_30%_70%/60%_30%_70%_40%] blur-2xl transform rotate-12" />
+        <div className="absolute -bottom-24 -left-20 w-[380px] sm:w-[480px] h-[380px] sm:h-[480px] bg-emerald-200/35 dark:bg-transparent rounded-[40%_60%_70%_30%/40%_40%_60%_60%] blur-3xl transform -rotate-6" />
         
-        {/* Dark mode espresso/maroon center radial glow */}
-        <div className="hidden dark:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-radial from-orange-600/15 via-[#23120b]/30 to-transparent rounded-full blur-3xl" />
-        <div className="hidden dark:block absolute -top-20 -left-20 w-96 h-96 bg-amber-700/10 rounded-full blur-3xl" />
-        <div className="hidden dark:block absolute -bottom-20 -right-20 w-96 h-96 bg-orange-700/10 rounded-full blur-3xl" />
+        {/* Dark mode deep emerald/teal center radial glow */}
+        <div className="hidden dark:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] bg-radial from-teal-500/15 via-[#092c27]/40 to-transparent rounded-full blur-3xl" />
+        <div className="hidden dark:block absolute -top-20 -left-20 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl" />
+        <div className="hidden dark:block absolute -bottom-20 -right-20 w-96 h-96 bg-teal-600/15 rounded-full blur-3xl" />
       </div>
 
       {/* ========================================================================= */}
-      {/* MAIN FRAMED HERO CONTAINER (Warm Cream in Light Mode / Espresso in Dark)  */}
+      {/* MAIN FRAMED HERO CONTAINER (Pale Mint Panel in Light / Deep Teal in Dark) */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col rounded-3xl sm:rounded-4xl border border-amber-100/90 dark:border-[#2a1710]/90 bg-white/95 dark:bg-[#150d0a]/90 backdrop-blur-2xl shadow-2xl shadow-orange-950/10 dark:shadow-black/70 relative overflow-hidden transition-all duration-300">
+      <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col rounded-3xl sm:rounded-4xl border border-teal-100/90 dark:border-[#0f3d37]/90 bg-white/95 dark:bg-[#061e1a]/90 backdrop-blur-2xl shadow-2xl shadow-teal-950/10 dark:shadow-black/70 relative overflow-hidden transition-all duration-300">
         
         {/* Subtle top inner highlight line */}
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 dark:via-orange-400/30 to-transparent pointer-events-none" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/40 dark:via-teal-400/30 to-transparent pointer-events-none" />
 
         {/* ----------------------------------------------------------------------- */}
         {/* 1. NAVBAR                                                               */}
         {/* ----------------------------------------------------------------------- */}
-        <header className="w-full px-6 sm:px-10 py-5 flex items-center justify-between border-b border-amber-100/80 dark:border-[#26150f]/80 relative z-20">
+        <header className="w-full px-6 sm:px-10 py-5 flex items-center justify-between border-b border-teal-100/80 dark:border-[#0d332c]/80 relative z-20">
           {/* Brand Logo / Wordmark */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-600/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-lg shadow-teal-600/30 group-hover:scale-105 transition-transform">
               <MessageSquare size={22} className="stroke-[2.2]" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg tracking-tight text-stone-900 dark:text-stone-100 leading-none">
+              <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100 leading-none">
                 PulseChat
               </span>
-              <span className="text-[10px] font-semibold tracking-wide uppercase text-orange-600 dark:text-orange-400 mt-1">
+              <span className="text-[10px] font-semibold tracking-wide uppercase text-teal-600 dark:text-teal-400 mt-1">
                 Real-Time Messaging
               </span>
             </div>
@@ -263,18 +263,18 @@ export const Landing = () => {
 
           {/* Minimal Nav Controls */}
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <ThemeToggle className="bg-amber-50/90 dark:bg-[#20130e]/90 border border-amber-200/70 dark:border-[#381e14] shadow-xs" />
+            <ThemeToggle className="bg-teal-50/90 dark:bg-[#0b2823]/90 border border-teal-200/70 dark:border-[#14423a] shadow-xs" />
             
             <Link
               to="/login"
-              className="hidden sm:inline-flex px-4 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-amber-100/60 dark:hover:bg-[#24130d] rounded-full transition-all"
+              className="hidden sm:inline-flex px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-100/60 dark:hover:bg-[#0e312b] rounded-full transition-all"
             >
               Sign In
             </Link>
 
             <Link
               to="/register"
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-500 active:scale-95 rounded-full shadow-md shadow-orange-600/30 transition-all duration-150"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 rounded-full shadow-md shadow-teal-600/30 transition-all duration-150"
             >
               Get Started
             </Link>
@@ -290,21 +290,21 @@ export const Landing = () => {
           <div className="lg:col-span-7 flex flex-col items-start space-y-6 sm:space-y-8 z-10 max-w-2xl">
             
             {/* Eyebrow Pill */}
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-orange-50 dark:bg-orange-950/60 border border-orange-200/90 dark:border-orange-800/80 text-orange-700 dark:text-orange-300 text-xs font-semibold shadow-xs">
-              <Sparkles size={13} className="text-orange-600 animate-pulse" />
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200/90 dark:border-teal-800/80 text-teal-700 dark:text-teal-300 text-xs font-semibold shadow-xs">
+              <Sparkles size={13} className="text-teal-600 animate-pulse" />
               <span>Real-Time 1-on-1 Messaging</span>
             </div>
 
             {/* Bold 2-Line Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100 leading-[1.12]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
               Real Conversations.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 dark:from-orange-400 dark:via-amber-300 dark:to-orange-300">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 dark:from-teal-400 dark:via-emerald-300 dark:to-teal-300">
                 Real Time.
               </span>
             </h1>
 
             {/* Honest, Plain-English Value Proposition */}
-            <p className="text-base sm:text-lg text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
               Instant messaging built exclusively for people you actually know. Enjoy live typing indicators, instant read receipts, and multi-device sync with zero unsolicited spam or clutter.
             </p>
 
@@ -312,7 +312,7 @@ export const Landing = () => {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto pt-2">
               <Link
                 to="/register"
-                className="inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-orange-600 hover:bg-orange-500 active:scale-[0.98] text-white font-semibold rounded-full text-sm shadow-xl shadow-orange-600/35 transition-all duration-150"
+                className="inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-teal-600 hover:bg-teal-500 active:scale-[0.98] text-white font-semibold rounded-full text-sm shadow-xl shadow-teal-600/35 transition-all duration-150"
               >
                 <span>Get Started</span>
                 <ArrowRight size={16} />
@@ -320,65 +320,65 @@ export const Landing = () => {
 
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-stone-700 dark:text-stone-300 hover:text-orange-600 dark:hover:text-white hover:bg-amber-50 dark:hover:bg-[#20120d] rounded-full border border-amber-200/80 dark:border-[#331c13] transition-all duration-150"
+                className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-white hover:bg-teal-50 dark:hover:bg-[#0c2a25] rounded-full border border-teal-200/80 dark:border-[#14423a] transition-all duration-150"
               >
                 Sign In
               </Link>
             </div>
 
             {/* Feature Highlights Trust Indicators */}
-            <div className="grid grid-cols-3 gap-4 pt-4 sm:pt-6 border-t border-amber-100 dark:border-[#2a1710] w-full max-w-lg">
+            <div className="grid grid-cols-3 gap-4 pt-4 sm:pt-6 border-t border-teal-100 dark:border-[#0f3d37] w-full max-w-lg">
               <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
                   <Shield size={14} />
                 </div>
-                <div className="text-[11px] leading-tight font-medium text-stone-700 dark:text-stone-300">
+                <div className="text-[11px] leading-tight font-medium text-slate-700 dark:text-slate-300">
                   Friend-Gated Privacy
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
                   <Zap size={14} />
                 </div>
-                <div className="text-[11px] leading-tight font-medium text-stone-700 dark:text-stone-300">
+                <div className="text-[11px] leading-tight font-medium text-slate-700 dark:text-slate-300">
                   Socket.io Live Speed
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
                   <Lock size={14} />
                 </div>
-                <div className="text-[11px] leading-tight font-medium text-stone-700 dark:text-stone-300">
+                <div className="text-[11px] leading-tight font-medium text-slate-700 dark:text-slate-300">
                   JWT Auth Sessions
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Warm Layered CSS Radial Shapes + Animated Phone Mockup */}
+          {/* RIGHT COLUMN: Deep Teal Layered CSS Radial Shapes + Animated Phone Mockup */}
           <div 
             ref={phoneContainerRef}
             className="lg:col-span-5 flex items-center justify-center relative w-full mt-4 lg:mt-0"
           >
             
             {/* Layered CSS Radial Background Shapes */}
-            <div className="absolute w-[320px] sm:w-[420px] h-[320px] sm:h-[420px] rounded-full bg-gradient-to-tr from-orange-500/20 via-amber-600/15 to-rose-500/10 blur-2xl pointer-events-none -z-10" />
-            <div className="absolute w-[260px] sm:w-[340px] h-[260px] sm:h-[340px] rounded-full border border-orange-400/25 dark:border-orange-500/20 pointer-events-none -z-10 scale-95" />
-            <div className="absolute w-[210px] sm:w-[280px] h-[210px] sm:h-[280px] rounded-full bg-gradient-to-br from-orange-600/15 to-amber-500/15 backdrop-blur-3xl pointer-events-none -z-10" />
+            <div className="absolute w-[320px] sm:w-[420px] h-[320px] sm:h-[420px] rounded-full bg-gradient-to-tr from-teal-500/20 via-emerald-600/15 to-cyan-500/10 blur-2xl pointer-events-none -z-10" />
+            <div className="absolute w-[260px] sm:w-[340px] h-[260px] sm:h-[340px] rounded-full border border-teal-400/25 dark:border-teal-500/20 pointer-events-none -z-10 scale-95" />
+            <div className="absolute w-[210px] sm:w-[280px] h-[210px] sm:h-[280px] rounded-full bg-gradient-to-br from-teal-600/15 to-emerald-500/15 backdrop-blur-3xl pointer-events-none -z-10" />
 
             {/* Smartphone Mockup Frame */}
-            <div className="relative w-full max-w-[290px] sm:max-w-[320px] rounded-[44px] bg-stone-900 dark:bg-black p-3 shadow-2xl shadow-orange-950/30 ring-1 ring-stone-800 dark:ring-[#331c13] transition-transform duration-300 hover:scale-[1.02]">
+            <div className="relative w-full max-w-[290px] sm:max-w-[320px] rounded-[44px] bg-slate-900 dark:bg-black p-3 shadow-2xl shadow-teal-950/40 ring-1 ring-slate-800 dark:ring-[#123e37] transition-transform duration-300 hover:scale-[1.02]">
               
               {/* Dynamic Island / Speaker Pill */}
-              <div className="absolute top-5 left-1/2 -translate-x-1/2 w-24 h-4 bg-stone-950 dark:bg-stone-900 rounded-full flex items-center justify-center z-30 shadow-xs">
-                <div className="w-2.5 h-2.5 rounded-full bg-stone-800 dark:bg-stone-700 mr-2" />
-                <div className="w-1.5 h-1.5 rounded-full bg-orange-500/80" />
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 w-24 h-4 bg-slate-950 dark:bg-slate-900 rounded-full flex items-center justify-center z-30 shadow-xs">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-800 dark:bg-slate-700 mr-2" />
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-500/80" />
               </div>
 
               {/* Inner Phone Screen Content */}
-              <div className="w-full h-[480px] sm:h-[510px] bg-stone-50 dark:bg-[#120a08] rounded-[34px] overflow-hidden flex flex-col relative border border-stone-200/70 dark:border-[#2a1710]/80">
+              <div className="w-full h-[480px] sm:h-[510px] bg-slate-50 dark:bg-[#051815] rounded-[34px] overflow-hidden flex flex-col relative border border-slate-200/70 dark:border-[#0e3a33]/80">
                 
                 {/* 
                   ========================================================================
@@ -399,16 +399,16 @@ export const Landing = () => {
                   <div className="w-full h-full flex flex-col justify-between text-xs select-none">
                     
                     {/* Mockup Header */}
-                    <div className="pt-8 pb-3 px-3.5 bg-white dark:bg-[#180e0b] border-b border-stone-200 dark:border-[#2a1710] flex items-center justify-between shrink-0">
+                    <div className="pt-8 pb-3 px-3.5 bg-white dark:bg-[#0a231f] border-b border-slate-200 dark:border-[#0e3831] flex items-center justify-between shrink-0">
                       <div className="flex items-center space-x-2.5">
                         <div className="relative">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-500 flex items-center justify-center text-white font-bold text-xs shadow-xs">
                             AK
                           </div>
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#180e0b] rounded-full" />
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#0a231f] rounded-full" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-stone-800 dark:text-stone-100 text-[11px] leading-tight">
+                          <span className="font-semibold text-slate-800 dark:text-slate-100 text-[11px] leading-tight">
                             Alex Kim
                           </span>
                           <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -416,7 +416,7 @@ export const Landing = () => {
                           </span>
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-orange-50 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800">
                         Mutual Friend
                       </span>
                     </div>
@@ -424,11 +424,11 @@ export const Landing = () => {
                     {/* Chat Messages Scroll Container */}
                     <div 
                       ref={messagesScrollRef}
-                      className="flex-1 p-3 space-y-2.5 overflow-y-auto bg-stone-100/50 dark:bg-[#0c0605]/50 transition-all duration-300"
+                      className="flex-1 p-3 space-y-2.5 overflow-y-auto bg-slate-100/50 dark:bg-[#031310]/50 transition-all duration-300"
                     >
                       {/* System timestamp badge */}
                       <div className="text-center my-1">
-                        <span className="text-[9px] text-stone-400 bg-white dark:bg-[#1e110d] px-2 py-0.5 rounded-full border border-stone-200 dark:border-[#2f1911]">
+                        <span className="text-[9px] text-slate-400 bg-white dark:bg-[#0d2a25] px-2 py-0.5 rounded-full border border-slate-200 dark:border-[#133e37]">
                           Today
                         </span>
                       </div>
@@ -444,23 +444,23 @@ export const Landing = () => {
                             } max-w-[85%] animate-fadeIn transition-all`}
                           >
                             {isMe ? (
-                              /* Outgoing / Sent Bubble (Vivid Orange) */
-                              <div className="bg-orange-600 text-white p-2.5 rounded-2xl rounded-br-xs shadow-md shadow-orange-600/25">
+                              /* Outgoing / Sent Bubble (Bright Teal) */
+                              <div className="bg-teal-600 text-white p-2.5 rounded-2xl rounded-br-xs shadow-md shadow-teal-600/25">
                                 <p className="text-[11px] leading-snug break-words">
                                   {msg.text}
                                 </p>
                                 <div className="flex items-center justify-end space-x-1 mt-1">
-                                  <span className="text-[8px] text-orange-100">{msg.time}</span>
-                                  <CheckCheck size={12} className="text-orange-100 stroke-[2.5]" />
+                                  <span className="text-[8px] text-teal-100">{msg.time}</span>
+                                  <CheckCheck size={12} className="text-teal-100 stroke-[2.5]" />
                                 </div>
                               </div>
                             ) : (
-                              /* Incoming / Received Bubble */
-                              <div className="bg-white dark:bg-[#1e110d] p-2.5 rounded-2xl rounded-bl-xs border border-stone-200/80 dark:border-[#331c13] shadow-xs">
-                                <p className="text-[11px] text-stone-800 dark:text-stone-200 leading-snug break-words">
+                              /* Incoming / Received Bubble (Neutral Dark) */
+                              <div className="bg-white dark:bg-[#0d2a25] p-2.5 rounded-2xl rounded-bl-xs border border-slate-200/80 dark:border-[#14423b] shadow-xs">
+                                <p className="text-[11px] text-slate-800 dark:text-slate-200 leading-snug break-words">
                                   {msg.text}
                                 </p>
-                                <span className="text-[8px] text-stone-400 mt-1 block text-right">
+                                <span className="text-[8px] text-slate-400 mt-1 block text-right">
                                   {msg.time}
                                 </span>
                               </div>
@@ -471,40 +471,40 @@ export const Landing = () => {
 
                       {/* Animated Typing Indicator Bubble (Appears when Alex is typing) */}
                       {isTypingIndicatorActive && (
-                        <div className="flex items-center space-x-1.5 bg-white dark:bg-[#1e110d] border border-stone-200/80 dark:border-[#331c13] px-2.5 py-1.5 rounded-full w-fit shadow-xs animate-fadeIn">
-                          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-bounce [animation-delay:-0.3s]" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-bounce [animation-delay:-0.15s]" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-bounce" />
-                          <span className="text-[9px] text-stone-400 ml-1 font-medium">Alex is typing...</span>
+                        <div className="flex items-center space-x-1.5 bg-white dark:bg-[#0d2a25] border border-slate-200/80 dark:border-[#14423b] px-2.5 py-1.5 rounded-full w-fit shadow-xs animate-fadeIn">
+                          <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.3s]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.15s]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" />
+                          <span className="text-[9px] text-slate-400 ml-1 font-medium">Alex is typing...</span>
                         </div>
                       )}
                     </div>
 
                     {/* Chat Input Bar Mockup with Live Typewriter Effect */}
-                    <div className="p-2.5 bg-white dark:bg-[#180e0b] border-t border-stone-200 dark:border-[#2a1710] flex items-center space-x-1.5 shrink-0">
-                      <div className="flex items-center space-x-1 text-stone-400">
+                    <div className="p-2.5 bg-white dark:bg-[#0a231f] border-t border-slate-200 dark:border-[#0e3831] flex items-center space-x-1.5 shrink-0">
+                      <div className="flex items-center space-x-1 text-slate-400">
                         <Paperclip size={14} />
                       </div>
                       
-                      <div className="flex-1 bg-stone-100 dark:bg-[#231410] rounded-full px-3 py-1.5 text-[10px] text-stone-700 dark:text-stone-200 flex items-center justify-between min-h-[28px] overflow-hidden">
+                      <div className="flex-1 bg-slate-100 dark:bg-[#0f2e29] rounded-full px-3 py-1.5 text-[10px] text-slate-700 dark:text-slate-200 flex items-center justify-between min-h-[28px] overflow-hidden">
                         <span className="truncate flex items-center">
                           {inputTypedText ? (
                             <>
                               <span>{inputTypedText}</span>
-                              <span className="inline-block w-1 h-3 bg-orange-500 ml-0.5 animate-pulse" />
+                              <span className="inline-block w-1 h-3 bg-teal-500 ml-0.5 animate-pulse" />
                             </>
                           ) : (
-                            <span className="text-stone-400 dark:text-stone-500">Type a message...</span>
+                            <span className="text-slate-400 dark:text-slate-500">Type a message...</span>
                           )}
                         </span>
-                        <Smile size={12} className="text-stone-400 shrink-0 ml-1" />
+                        <Smile size={12} className="text-slate-400 shrink-0 ml-1" />
                       </div>
 
                       <div
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-white shadow-xs transition-all duration-150 ${
                           inputTypedText
-                            ? 'bg-orange-600 scale-105 shadow-orange-600/30'
-                            : 'bg-orange-600/80'
+                            ? 'bg-teal-600 scale-105 shadow-teal-600/30'
+                            : 'bg-teal-600/80'
                         }`}
                       >
                         <Send size={11} className="translate-x-[0.5px]" />
@@ -522,11 +522,11 @@ export const Landing = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. MINIMAL CLEAN FOOTER (High Contrast Warm Palette)                      */}
+      {/* 3. MINIMAL CLEAN FOOTER (High Contrast Pale Mint / Deep Teal Palette)     */}
       {/* ========================================================================= */}
-      <footer className="w-full max-w-7xl mx-auto mt-4 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-700 dark:text-stone-400 font-medium">
+      <footer className="w-full max-w-7xl mx-auto mt-4 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-teal-950/80 dark:text-teal-200/60 font-medium">
         <div className="flex items-center space-x-2">
-          <span className="font-bold text-stone-800 dark:text-stone-200">PulseChat</span>
+          <span className="font-bold text-teal-950 dark:text-teal-100">PulseChat</span>
           <span>•</span>
           <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
         </div>
@@ -536,7 +536,7 @@ export const Landing = () => {
             href="https://github.com/Vamsi-11k/chat-application"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-1.5 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+            className="inline-flex items-center space-x-1.5 hover:text-teal-600 dark:hover:text-teal-300 transition-colors"
           >
             <Github size={14} />
             <span>GitHub</span>

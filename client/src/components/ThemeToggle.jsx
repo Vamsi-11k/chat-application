@@ -11,7 +11,7 @@ export const ThemeToggle = ({ className = '', size = 18, showLabel = false }) =>
       onClick={toggleTheme}
       title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-      className={`relative inline-flex items-center justify-center p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors duration-200 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${className}`}
+      className={`relative inline-flex items-center justify-center p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors duration-200 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${className}`}
     >
       <div className="relative w-5 h-5 flex items-center justify-center">
         {/* Sun Icon (shown in light mode) */}
@@ -26,7 +26,7 @@ export const ThemeToggle = ({ className = '', size = 18, showLabel = false }) =>
         {/* Moon Icon (shown in dark mode) */}
         <Moon
           size={size}
-          className={`absolute transition-all duration-300 transform text-indigo-400 ${
+          className={`absolute transition-all duration-300 transform text-teal-400 ${
             isDark
               ? 'opacity-100 rotate-0 scale-100'
               : 'opacity-0 -rotate-90 scale-50 pointer-events-none'
