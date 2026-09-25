@@ -14,6 +14,7 @@ import { useSocket } from '../context/SocketContext';
 import { UserItem } from './UserItem';
 import { SkeletonItem } from './Loader';
 import { RequestsTab } from './RequestsTab';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Sidebar = ({
   friends,
@@ -52,9 +53,9 @@ export const Sidebar = ({
   const pendingIncomingCount = incomingRequests.length;
 
   return (
-    <aside className="w-full md:w-80 lg:w-96 h-full flex flex-col bg-slate-900 border-r border-slate-800 flex-shrink-0">
+    <aside className="w-full md:w-80 lg:w-96 h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 transition-colors duration-200">
       {/* Current User Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div className="flex items-center space-x-3 min-w-0 flex-1">
           <div
             className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md flex-shrink-0"
@@ -63,19 +64,21 @@ export const Sidebar = ({
             {currentUser?.username?.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-bold text-slate-100 truncate">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
               {currentUser?.username}
             </h3>
-            <p className="text-xs text-slate-400 truncate">{currentUser?.email}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser?.email}</p>
           </div>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center space-x-1 relative">
+          <ThemeToggle />
+
           <button
             onClick={onOpenAddFriend}
             title="Add Contact / Send Request"
-            className="p-2 text-slate-300 hover:text-indigo-400 hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-indigo-400 dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
             <UserPlus size={18} />
           </button>
@@ -85,7 +88,7 @@ export const Sidebar = ({
             <button
               onClick={() => setShowMenu(!showMenu)}
               title="Options"
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 rounded-xl transition-colors"
             >
               <MoreVertical size={18} />
             </button>
@@ -96,13 +99,13 @@ export const Sidebar = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setShowMenu(false)}
                 />
-                <div className="absolute right-0 top-full mt-1.5 w-48 bg-slate-800 border border-slate-700 rounded-2xl shadow-xl py-1.5 z-50 animate-fadeIn">
+                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-1.5 z-50 animate-fadeIn">
                   <button
                     onClick={() => {
                       setShowMenu(false);
                       onOpenClearAllModal();
                     }}
-                    className="w-full px-4 py-2 text-left text-xs font-medium text-rose-400 hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
                   >
                     <Trash2 size={14} />
                     <span>Clear All Chats</span>
@@ -112,7 +115,7 @@ export const Sidebar = ({
                       setShowMenu(false);
                       logout();
                     }}
-                    className="w-full px-4 py-2 text-left text-xs font-medium text-slate-300 hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors border-t border-slate-100 dark:border-slate-700/60"
                   >
                     <LogOut size={14} />
                     <span>Sign Out</span>
@@ -126,13 +129,13 @@ export const Sidebar = ({
 
       {/* Tabs Switcher */}
       <div className="px-3 pt-3 pb-1">
-        <div className="grid grid-cols-2 gap-1 bg-slate-950/60 p-1 rounded-2xl border border-slate-800">
+        <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-950/60 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800">
           <button
             onClick={() => setActiveTab('chats')}
             className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'chats'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'
             }`}
           >
             <MessagesSquare size={15} />
@@ -144,7 +147,7 @@ export const Sidebar = ({
             className={`relative flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'requests'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'
             }`}
           >
             <Inbox size={15} />
@@ -161,7 +164,7 @@ export const Sidebar = ({
       {activeTab === 'chats' ? (
         <>
           {/* Search Bar */}
-          <div className="p-3 border-b border-slate-800/80">
+          <div className="p-3 border-b border-slate-200/80 dark:border-slate-800/80">
             <div className="relative">
               <Search
                 size={16}
@@ -172,7 +175,7 @@ export const Sidebar = ({
                 placeholder="Filter chats & friends..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-800/80 border border-slate-700/70 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                className="w-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/70 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
               />
             </div>
           </div>
@@ -188,12 +191,12 @@ export const Sidebar = ({
               </div>
             ) : friends.length === 0 ? (
               <div className="py-16 px-4 text-center text-slate-400 space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-800 flex items-center justify-center mx-auto text-slate-500">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500 shadow-xs">
                   <Users size={26} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-200">No Contacts Yet</h4>
-                  <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No Contacts Yet</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 max-w-xs mx-auto">
                     Search and send chat requests to start real-time messaging with your friends.
                   </p>
                 </div>

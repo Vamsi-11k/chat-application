@@ -53,7 +53,7 @@ export const MessageInput = ({ onSendMessage, onTyping, onStopTyping, disabled =
   }, []);
 
   return (
-    <form onSubmit={handleSend} className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800">
+    <form onSubmit={handleSend} className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
       <div className="flex items-center space-x-2">
         <input
           type="text"
@@ -62,7 +62,7 @@ export const MessageInput = ({ onSendMessage, onTyping, onStopTyping, disabled =
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
           disabled={disabled}
-          className="flex-1 bg-slate-800 border border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 rounded-full px-5 py-3 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all duration-150"
+          className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 rounded-full px-5 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all duration-150"
         />
 
         <button

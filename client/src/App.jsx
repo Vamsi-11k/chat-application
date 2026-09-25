@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useTheme } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
@@ -10,6 +11,8 @@ import { Chat } from './pages/Chat';
 import { NotFound } from './pages/NotFound';
 
 export default function App() {
+  const { isDark } = useTheme();
+
   return (
     <AuthProvider>
       <SocketProvider>
@@ -41,28 +44,31 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        {/* Global Toast Notifications */}
+        {/* Global Dynamic Toast Notifications */}
         <Toaster
           position="top-center"
           toastOptions={{
             style: {
-              background: '#0f172a',
-              color: '#f8fafc',
-              border: '1px solid #334155',
+              background: isDark ? '#0f172a' : '#ffffff',
+              color: isDark ? '#f8fafc' : '#0f172a',
+              border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
               fontSize: '13px',
               borderRadius: '12px',
-              padding: '12px 16px'
+              padding: '12px 16px',
+              boxShadow: isDark
+                ? '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+                : '0 10px 25px -5px rgba(0, 0, 0, 0.08)'
             },
             success: {
               iconTheme: {
                 primary: '#10b981',
-                secondary: '#0f172a'
+                secondary: isDark ? '#0f172a' : '#ffffff'
               }
             },
             error: {
               iconTheme: {
                 primary: '#f43f5e',
-                secondary: '#0f172a'
+                secondary: isDark ? '#0f172a' : '#ffffff'
               }
             }
           }}

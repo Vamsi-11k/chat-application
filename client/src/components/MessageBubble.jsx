@@ -15,16 +15,16 @@ export const MessageBubble = ({ message, isOwn }) => {
         className={`relative max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm break-words transition-all duration-150 ${
           isOwn
             ? 'bg-indigo-600 text-white rounded-br-xs'
-            : 'bg-slate-800/90 text-slate-100 border border-slate-700/50 rounded-bl-xs'
+            : 'bg-white dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700/50 rounded-bl-xs'
         }`}
       >
-        <p className="whitespace-pre-wrap leading-relaxed selection:bg-white/20">
+        <p className="whitespace-pre-wrap leading-relaxed selection:bg-indigo-500/30 dark:selection:bg-white/20">
           {message.text}
         </p>
 
         <div
           className={`flex items-center justify-end space-x-1 mt-1 text-[10px] select-none ${
-            isOwn ? 'text-indigo-200' : 'text-slate-400'
+            isOwn ? 'text-indigo-200' : 'text-slate-400 dark:text-slate-400'
           }`}
         >
           <span>{formattedTime}</span>
@@ -33,7 +33,7 @@ export const MessageBubble = ({ message, isOwn }) => {
               {isRead ? (
                 <CheckCheck size={14} className="text-sky-300 inline" />
               ) : (
-                <Check size={14} className="text-indigo-300 inline" />
+                <Check size={14} className="text-indigo-200 inline" />
               )}
             </span>
           )}

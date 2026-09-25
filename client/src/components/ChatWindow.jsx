@@ -63,12 +63,12 @@ export const ChatWindow = ({
 
   if (!selectedUser) {
     return (
-      <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-slate-950 p-8 text-center select-none">
-        <div className="w-20 h-20 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 mb-4 shadow-xl">
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-8 text-center select-none transition-colors duration-200">
+        <div className="w-20 h-20 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-indigo-500 dark:text-indigo-400 mb-4 shadow-xl">
           <MessagesSquare size={36} />
         </div>
-        <h3 className="text-lg font-bold text-slate-200">Select a conversation</h3>
-        <p className="text-sm text-slate-500 max-w-sm mt-1">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Select a conversation</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-500 max-w-sm mt-1">
           Choose a contact from the sidebar or search to start real-time messaging.
         </p>
       </div>
@@ -78,13 +78,13 @@ export const ChatWindow = ({
   const isOnline = isUserOnline(selectedUser._id) || selectedUser.isOnline;
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-slate-950 min-w-0">
+    <main className="flex-1 flex flex-col h-full bg-slate-50/70 dark:bg-slate-950 min-w-0 transition-colors duration-200">
       {/* Chat Header */}
-      <header className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between flex-shrink-0 relative">
+      <header className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 relative">
         <div className="flex items-center space-x-3 min-w-0">
           <button
             onClick={onBack}
-            className="md:hidden p-1.5 -ml-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="md:hidden p-1.5 -ml-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
@@ -97,19 +97,19 @@ export const ChatWindow = ({
               {selectedUser.username.charAt(0).toUpperCase()}
             </div>
             <span
-              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${
-                isOnline ? 'bg-emerald-500' : 'bg-slate-500'
+              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
+                isOnline ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-500'
               }`}
             />
           </div>
 
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-slate-100 truncate">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
               {selectedUser.username}
             </h3>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {isOnline ? (
-                <span className="text-emerald-400 font-medium">Online</span>
+                <span className="text-emerald-500 dark:text-emerald-400 font-medium">Online</span>
               ) : (
                 'Offline'
               )}
@@ -122,7 +122,7 @@ export const ChatWindow = ({
           <button
             onClick={() => setShowMenu(!showMenu)}
             title="Chat Options"
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
             <MoreVertical size={18} />
           </button>
@@ -133,13 +133,13 @@ export const ChatWindow = ({
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-1.5 w-52 bg-slate-800 border border-slate-700 rounded-2xl shadow-xl py-1.5 z-50 animate-fadeIn">
+              <div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-1.5 z-50 animate-fadeIn">
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     onClearChat();
                   }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-amber-400 hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
                 >
                   <Eraser size={15} />
                   <span>Clear Chat Messages</span>
@@ -150,7 +150,7 @@ export const ChatWindow = ({
                     setShowMenu(false);
                     onDeleteChat();
                   }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-rose-400 hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
                 >
                   <Trash2 size={15} />
                   <span>Delete Conversation</span>
@@ -161,7 +161,7 @@ export const ChatWindow = ({
                     setShowMenu(false);
                     onRemoveFriend();
                   }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-slate-300 hover:text-rose-400 hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors border-t border-slate-700/60 mt-1"
+                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors border-t border-slate-100 dark:border-slate-700/60 mt-1"
                 >
                   <UserX size={15} />
                   <span>Remove Friend</span>
@@ -181,7 +181,7 @@ export const ChatWindow = ({
         {/* Load More Spinner on Top */}
         {loadingMore && (
           <div className="flex justify-center py-2">
-            <Spinner size={20} className="text-indigo-400" />
+            <Spinner size={20} className="text-indigo-500 dark:text-indigo-400" />
           </div>
         )}
 
@@ -191,11 +191,11 @@ export const ChatWindow = ({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center p-8 select-none">
-            <div className="p-4 rounded-full bg-slate-900/60 text-slate-500 mb-3 border border-slate-800">
+            <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-900/60 text-slate-400 dark:text-slate-500 mb-3 border border-slate-200 dark:border-slate-800 shadow-xs">
               <MessagesSquare size={32} />
             </div>
-            <p className="text-sm font-medium text-slate-400">No messages yet</p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-400">No messages yet</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
               Say hello to start the conversation!
             </p>
           </div>

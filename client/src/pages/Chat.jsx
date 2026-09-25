@@ -475,7 +475,7 @@ export const Chat = () => {
   });
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-slate-950">
+    <div className="h-screen w-screen overflow-hidden flex bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
       {/* Sidebar: visible on desktop, or mobile when no chat is selected */}
       <div
         className={`${
