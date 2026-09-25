@@ -10,30 +10,30 @@ export const MessageBubble = ({ message, isOwn }) => {
   const isRead = !!message.readAt;
 
   return (
-    <div className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'} my-1.5`}>
+    <div className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'} my-1`}>
       <div
-        className={`relative max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm break-words transition-all duration-150 ${
+        className={`relative max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-xs text-sm break-words transition-all duration-150 ${
           isOwn
-            ? 'bg-indigo-600 text-white rounded-br-xs'
-            : 'bg-white dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700/50 rounded-bl-xs'
+            ? 'bg-teal-600 text-white rounded-br-xs shadow-teal-600/20 shadow-md'
+            : 'bg-white dark:bg-[#0c2a25] text-slate-800 dark:text-slate-100 border border-teal-100/80 dark:border-[#14423a] rounded-bl-xs shadow-xs'
         }`}
       >
-        <p className="whitespace-pre-wrap leading-relaxed selection:bg-indigo-500/30 dark:selection:bg-white/20">
+        <p className="whitespace-pre-wrap leading-relaxed selection:bg-teal-500/30 dark:selection:bg-white/20">
           {message.text}
         </p>
 
         <div
           className={`flex items-center justify-end space-x-1 mt-1 text-[10px] select-none ${
-            isOwn ? 'text-indigo-200' : 'text-slate-400 dark:text-slate-400'
+            isOwn ? 'text-teal-100' : 'text-slate-400 dark:text-slate-400'
           }`}
         >
           <span>{formattedTime}</span>
           {isOwn && (
             <span title={isRead ? `Read at ${format(new Date(message.readAt), 'p')}` : 'Delivered'}>
               {isRead ? (
-                <CheckCheck size={14} className="text-sky-300 inline" />
+                <CheckCheck size={13} className="text-teal-200 inline stroke-[2.5]" />
               ) : (
-                <Check size={14} className="text-indigo-200 inline" />
+                <Check size={13} className="text-teal-200 inline" />
               )}
             </span>
           )}

@@ -7,7 +7,8 @@ import {
   Inbox,
   MoreVertical,
   Trash2,
-  Users
+  Users,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -36,8 +37,8 @@ export const Sidebar = ({
 }) => {
   const { user: currentUser, logout } = useAuth();
   const { isUserOnline } = useSocket();
-  const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'requests'
-  const [showMenu, setShowMenu] = useState(false);
+  const [activeNavTab, setActiveNavTab] = useState('chats'); // 'chats' | 'requests'
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Map conversation unread counts and last message by participant ID
   const conversationMap = new Map();
@@ -45,77 +46,132 @@ export const Sidebar = ({
     if (c.otherParticipant?._id) {
       conversationMap.set(c.otherParticipant._id, {
         unreadCount: c.unreadCount || 0,
-        lastMessageText: c.lastMessage?.text || ''
+        lastMessageText: c.lastMessage?.text || '',
+        lastMessageTime: c.lastMessage?.createdAt || c.updatedAt
       });
     }
   });
 
   const pendingIncomingCount = incomingRequests.length;
 
+  // Filter online friends for the horizontal "Recent / Online" row
+  const onlineFriends = friends.filter(
+    (f) => isUserOnline(f._id) || f.isOnline
+  );
+
   return (
-    <aside className="w-full md:w-80 lg:w-96 h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 transition-colors duration-200">
-      {/* Current User Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <div className="flex items-center space-x-3 min-w-0 flex-1">
+    <div className="h-full flex flex-row flex-shrink-0 select-none">
+      
+      {/* ===================================================================== */}
+      {/* 1. FAR-LEFT ICON RAIL (Column 1 - Slim Vertical Strip)                */}
+      {/* ===================================================================== */}
+      <nav className="w-16 sm:w-18 h-full flex flex-col items-center justify-between py-5 bg-white/90 dark:bg-[#031512] border-r border-teal-100/80 dark:border-[#092b26] z-20 flex-shrink-0 transition-colors duration-200">
+        
+        {/* Top: Logo / App Wordmark Icon */}
+        <div className="flex flex-col items-center space-y-6">
           <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md flex-shrink-0"
-            style={{ backgroundColor: currentUser?.avatarColor || '#6366F1' }}
+            title="PulseChat"
+            className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-lg shadow-teal-600/30"
           >
-            {currentUser?.username?.charAt(0).toUpperCase()}
+            <MessagesSquare size={20} className="stroke-[2.2]" />
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
-              {currentUser?.username}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser?.email}</p>
+
+          {/* Navigation Items */}
+          <div className="flex flex-col items-center space-y-3">
+            {/* Chats Navigation Item */}
+            <button
+              onClick={() => setActiveNavTab('chats')}
+              title="All Conversations"
+              aria-label="All Conversations"
+              className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                activeNavTab === 'chats'
+                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                  : 'text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-[#092a25]'
+              }`}
+            >
+              <MessagesSquare size={20} />
+            </button>
+
+            {/* Friend Requests Navigation Item */}
+            <button
+              onClick={() => setActiveNavTab('requests')}
+              title="Friend Requests"
+              aria-label="Friend Requests"
+              className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                activeNavTab === 'requests'
+                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                  : 'text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-[#092a25]'
+              }`}
+            >
+              <Inbox size={20} />
+              {pendingIncomingCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#031512] animate-pulse shadow-xs">
+                  {pendingIncomingCount}
+                </span>
+              )}
+            </button>
+
+            {/* Add Friend Modal Trigger */}
+            <button
+              onClick={onOpenAddFriend}
+              title="Add New Friend / Send Request"
+              aria-label="Add New Friend"
+              className="w-11 h-11 rounded-2xl flex items-center justify-center text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-[#092a25] transition-all duration-200"
+            >
+              <UserPlus size={20} />
+            </button>
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center space-x-1 relative">
-          <ThemeToggle />
+        {/* Bottom Actions: Theme Toggle, User Avatar & Logout */}
+        <div className="flex flex-col items-center space-y-3.5 relative">
+          <ThemeToggle className="w-10 h-10 rounded-2xl bg-teal-50/80 dark:bg-[#092a25] border border-teal-100 dark:border-[#103a33] text-teal-600 dark:text-teal-300 shadow-xs" />
 
-          <button
-            onClick={onOpenAddFriend}
-            title="Add Contact / Send Request"
-            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-indigo-400 dark:hover:bg-slate-800 rounded-xl transition-colors"
-          >
-            <UserPlus size={18} />
-          </button>
-
-          {/* More options menu */}
+          {/* Current User Profile Avatar with dropdown options */}
           <div className="relative">
             <button
-              onClick={() => setShowMenu(!showMenu)}
-              title="Options"
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 rounded-xl transition-colors"
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              title={currentUser?.username}
+              aria-label="User Options Menu"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md ring-2 ring-transparent hover:ring-teal-500 transition-all text-sm"
+              style={{ backgroundColor: currentUser?.avatarColor || '#0d9488' }}
             >
-              <MoreVertical size={18} />
+              {currentUser?.username?.charAt(0).toUpperCase()}
             </button>
 
-            {showMenu && (
+            {showMoreMenu && (
               <>
                 <div
                   className="fixed inset-0 z-40"
-                  onClick={() => setShowMenu(false)}
+                  onClick={() => setShowMoreMenu(false)}
                 />
-                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl py-1.5 z-50 animate-fadeIn">
+                <div className="absolute left-full bottom-0 ml-3 w-52 bg-white dark:bg-[#061e1a] border border-teal-100 dark:border-[#0f3d37] rounded-2xl shadow-2xl shadow-black/50 py-2 z-50 animate-fadeIn text-xs">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-[#0f3d37]/80">
+                    <p className="font-bold text-slate-800 dark:text-slate-100 truncate">
+                      {currentUser?.username}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      {currentUser?.email}
+                    </p>
+                  </div>
+
                   <button
                     onClick={() => {
-                      setShowMenu(false);
+                      setShowMoreMenu(false);
                       onOpenClearAllModal();
                     }}
-                    className="w-full px-4 py-2.5 text-left text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors"
+                    className="w-full px-4 py-2.5 text-left font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-[#123832] flex items-center space-x-2.5 transition-colors"
                   >
                     <Trash2 size={14} />
                     <span>Clear All Chats</span>
                   </button>
+
                   <button
                     onClick={() => {
-                      setShowMenu(false);
+                      setShowMoreMenu(false);
                       logout();
                     }}
-                    className="w-full px-4 py-2.5 text-left text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center space-x-2.5 transition-colors border-t border-slate-100 dark:border-slate-700/60"
+                    className="w-full px-4 py-2.5 text-left font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#123832] flex items-center space-x-2.5 transition-colors border-t border-slate-100 dark:border-[#0f3d37]/80"
                   >
                     <LogOut size={14} />
                     <span>Sign Out</span>
@@ -125,123 +181,149 @@ export const Sidebar = ({
             )}
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Tabs Switcher */}
-      <div className="px-3 pt-3 pb-1">
-        <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-950/60 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800">
-          <button
-            onClick={() => setActiveTab('chats')}
-            className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === 'chats'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <MessagesSquare size={15} />
-            <span>Chats ({friends.length})</span>
-          </button>
+      {/* ===================================================================== */}
+      {/* 2. MIDDLE COLUMN (Column 2 - Search + Recent + Conversation List)     */}
+      {/* ===================================================================== */}
+      <aside className="w-full sm:w-80 md:w-84 lg:w-92 h-full flex flex-col bg-slate-50/95 dark:bg-[#051c18]/95 border-r border-teal-100/80 dark:border-[#0c3530] flex-shrink-0 transition-colors duration-200">
+        
+        {/* Column Header & Search */}
+        <div className="p-4 sm:p-5 border-b border-teal-100/70 dark:border-[#0c3530]/80 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              {activeNavTab === 'chats' ? 'Messages' : 'Chat Requests'}
+            </h2>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/60">
+              {activeNavTab === 'chats' ? `${friends.length} contacts` : `${pendingIncomingCount} pending`}
+            </span>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('requests')}
-            className={`relative flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === 'requests'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            <Inbox size={15} />
-            <span>Requests</span>
-            {pendingIncomingCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full animate-pulse">
-                {pendingIncomingCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {activeTab === 'chats' ? (
-        <>
           {/* Search Bar */}
-          <div className="p-3 border-b border-slate-200/80 dark:border-slate-800/80">
-            <div className="relative">
-              <Search
-                size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="text"
-                placeholder="Filter chats & friends..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/70 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-              />
-            </div>
+          <div className="relative">
+            <Search
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal-600/70 dark:text-teal-400/70"
+            />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white dark:bg-[#082420] border border-teal-100 dark:border-[#103a33] rounded-full pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-[#0a2c27] focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all"
+            />
           </div>
-
-          {/* Friends / Chats List Container */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-            {loadingFriends ? (
-              <div className="space-y-2 p-2">
-                <SkeletonItem />
-                <SkeletonItem />
-                <SkeletonItem />
-                <SkeletonItem />
-              </div>
-            ) : friends.length === 0 ? (
-              <div className="py-16 px-4 text-center text-slate-400 space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500 shadow-xs">
-                  <Users size={26} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No Contacts Yet</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 max-w-xs mx-auto">
-                    Search and send chat requests to start real-time messaging with your friends.
-                  </p>
-                </div>
-                <button
-                  onClick={onOpenAddFriend}
-                  className="mt-2 inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/25 transition-all"
-                >
-                  <UserPlus size={14} />
-                  <span>Find & Add Users</span>
-                </button>
-              </div>
-            ) : (
-              friends.map((f) => {
-                const convData = conversationMap.get(f._id) || {};
-                const isOnline = isUserOnline(f._id) || f.isOnline;
-
-                return (
-                  <UserItem
-                    key={f._id}
-                    user={f}
-                    isSelected={selectedUser?._id === f._id}
-                    isOnline={isOnline}
-                    unreadCount={convData.unreadCount || 0}
-                    lastMessageText={convData.lastMessageText || ''}
-                    onClick={() => onSelectUser(f)}
-                  />
-                );
-              })
-            )}
-          </div>
-        </>
-      ) : (
-        /* Requests Tab */
-        <div className="flex-1 overflow-y-auto">
-          <RequestsTab
-            incomingRequests={incomingRequests}
-            outgoingRequests={outgoingRequests}
-            onAccept={onAcceptRequest}
-            onReject={onRejectRequest}
-            onCancel={onCancelRequest}
-            loading={loadingRequests}
-            actionLoading={requestActionLoading}
-          />
         </div>
-      )}
-    </aside>
+
+        {/* Content Body: Either Chats List or Requests Tab */}
+        {activeNavTab === 'chats' ? (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            
+            {/* Horizontal "Recent / Online" Row */}
+            {onlineFriends.length > 0 && !searchQuery.trim() && (
+              <div className="px-4 py-3 border-b border-teal-100/50 dark:border-[#0c3530]/60 flex-shrink-0">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400">
+                    Online Now
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+
+                <div className="flex items-center space-x-3 overflow-x-auto pb-1.5 scrollbar-none">
+                  {onlineFriends.map((f) => (
+                    <button
+                      key={f._id}
+                      onClick={() => onSelectUser(f)}
+                      title={f.username}
+                      className="flex flex-col items-center space-y-1 group flex-shrink-0 focus:outline-none"
+                    >
+                      <div className="relative">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-sm ring-2 ring-transparent group-hover:ring-teal-500 transition-all"
+                          style={{ backgroundColor: f.avatarColor || '#0d9488' }}
+                        >
+                          {f.username.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-[#051c18]" />
+                      </div>
+                      <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 truncate max-w-[48px] group-hover:text-teal-600 dark:group-hover:text-teal-300">
+                        {f.username}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Vertical Conversation List */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {loadingFriends ? (
+                <div className="space-y-2 p-2">
+                  <SkeletonItem />
+                  <SkeletonItem />
+                  <SkeletonItem />
+                  <SkeletonItem />
+                </div>
+              ) : friends.length === 0 ? (
+                <div className="py-16 px-4 text-center text-slate-400 space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-[#092a25] border border-teal-100 dark:border-[#103a33] flex items-center justify-center mx-auto text-teal-600 dark:text-teal-400 shadow-xs">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      No Contacts Yet
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
+                      Search and connect with friends to start real-time 1-on-1 messaging.
+                    </p>
+                  </div>
+                  <button
+                    onClick={onOpenAddFriend}
+                    className="mt-2 inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-md shadow-teal-600/25 transition-all"
+                  >
+                    <UserPlus size={14} />
+                    <span>Find Users</span>
+                  </button>
+                </div>
+              ) : (
+                friends.map((f) => {
+                  const convData = conversationMap.get(f._id) || {};
+                  const isOnline = isUserOnline(f._id) || f.isOnline;
+
+                  return (
+                    <UserItem
+                      key={f._id}
+                      user={f}
+                      isSelected={selectedUser?._id === f._id}
+                      isOnline={isOnline}
+                      unreadCount={convData.unreadCount || 0}
+                      lastMessageText={convData.lastMessageText || ''}
+                      lastMessageTime={convData.lastMessageTime}
+                      onClick={() => onSelectUser(f)}
+                    />
+                  );
+                })
+              )}
+            </div>
+
+          </div>
+        ) : (
+          /* Requests Tab Body */
+          <div className="flex-1 overflow-y-auto">
+            <RequestsTab
+              incomingRequests={incomingRequests}
+              outgoingRequests={outgoingRequests}
+              onAccept={onAcceptRequest}
+              onReject={onRejectRequest}
+              onCancel={onCancelRequest}
+              loading={loadingRequests}
+              actionLoading={requestActionLoading}
+            />
+          </div>
+        )}
+
+      </aside>
+
+    </div>
   );
 };

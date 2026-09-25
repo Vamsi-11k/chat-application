@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquare, Mail, Lock } from 'lucide-react';
+import { MessageSquare, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { FormInput } from '../components/FormInput';
 import { Spinner } from '../components/Loader';
 import { ThemeToggle } from '../components/ThemeToggle';
 
@@ -23,6 +22,7 @@ export const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -42,79 +42,187 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-slate-100 dark:bg-slate-950 relative transition-colors duration-200">
-      {/* Floating Theme Toggle */}
-      <div className="absolute top-5 right-5">
-        <ThemeToggle className="bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm" />
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-[#f0fdfa] via-[#e6f7f4] to-[#ddf4ef] dark:from-[#031714] dark:via-[#072420] dark:to-[#0f3d37] text-slate-900 dark:text-slate-100 relative transition-colors duration-300 overflow-hidden">
+      
+      {/* Background Soft Atmospheric Ambient Glows */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-teal-200/40 dark:bg-transparent rounded-full blur-3xl" />
+        <div className="hidden dark:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-radial from-teal-500/10 via-[#092c27]/30 to-transparent rounded-full blur-3xl" />
+        <div className="hidden dark:block absolute -bottom-20 -right-20 w-80 h-80 bg-teal-600/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 shadow-inner">
-            <MessageSquare size={28} />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-            Welcome back
+      {/* Floating Theme Toggle (Top Right) */}
+      <div className="absolute top-5 right-5 z-30">
+        <ThemeToggle className="bg-white/80 dark:bg-[#0b2823]/80 border border-teal-200/70 dark:border-[#14423a] shadow-xs" />
+      </div>
+
+      {/* ======================================================================= */}
+      {/* AUTH CARD (Centered Vertical Panel with Top-Left Accent Wave)           */}
+      {/* ======================================================================= */}
+      <div className="w-full max-w-[420px] bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100/90 dark:border-[#0f3d37]/90 rounded-[32px] p-8 sm:p-10 shadow-2xl shadow-teal-950/15 dark:shadow-black/70 relative overflow-hidden transition-all duration-300">
+        
+        {/* Top-Left Organic Curved Accent Ribbon */}
+        <div className="absolute -top-4 -left-4 w-56 h-56 pointer-events-none overflow-hidden z-0">
+          <svg
+            viewBox="0 0 200 200"
+            className="w-full h-full transform -rotate-6 scale-110"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="tealRibbonGrad" x1="0%" y1="0%" x2="80%" y2="80%">
+                <stop offset="0%" stopColor="#0d9488" stopOpacity="0.75" />
+                <stop offset="45%" stopColor="#14b8a6" stopOpacity="0.4" />
+                <stop offset="85%" stopColor="#0f3d37" stopOpacity="0.05" />
+                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="tealRibbonSub" x1="0%" y1="20%" x2="70%" y2="90%">
+                <stop offset="0%" stopColor="#2dd4bf" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M0,0 L180,0 C140,55 160,95 115,135 C70,175 45,145 0,185 Z"
+              fill="url(#tealRibbonSub)"
+            />
+            <path
+              d="M0,0 L155,0 C125,45 145,80 100,120 C60,155 35,130 0,165 Z"
+              fill="url(#tealRibbonGrad)"
+            />
+          </svg>
+        </div>
+
+        {/* 1. HEADER ROW */}
+        <div className="flex items-center justify-between relative z-10 mb-8">
+          {/* App Logo */}
+          <Link to="/" className="flex items-center space-x-2.5 group">
+            <div className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-md shadow-teal-600/30 group-hover:scale-105 transition-transform">
+              <MessageSquare size={20} className="stroke-[2.2]" />
+            </div>
+            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
+              PulseChat
+            </span>
+          </Link>
+
+          {/* Return to Home link */}
+          <Link
+            to="/"
+            title="Back to Home"
+            aria-label="Back to Home"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-[#0c2a25] transition-colors"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+        </div>
+
+        {/* 2. FORM TITLE */}
+        <div className="relative z-10 mb-7">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Login
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Sign in to continue your real-time conversations
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Sign in to continue to your real-time conversations
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <FormInput
-            id="email"
-            label="Email Address"
-            type="email"
-            placeholder="you@example.com"
-            icon={Mail}
-            register={register('email')}
-            error={errors.email}
-            disabled={isSubmitting}
-          />
+        {/* 3. FORM FIELDS (Underlined Style) */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
+          
+          {/* Email Field */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
+              <Mail size={13} className="text-teal-600 dark:text-teal-400" />
+              <span>Email</span>
+            </label>
+            <div className="relative">
+              <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                disabled={isSubmitting}
+                {...register('email')}
+                className={`w-full bg-transparent border-b-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 py-2.5 px-0 focus:outline-none transition-colors duration-200 disabled:opacity-50 ${
+                  errors.email
+                    ? 'border-rose-500 focus:border-rose-500'
+                    : 'border-slate-200 dark:border-slate-700/80 focus:border-teal-500 dark:focus:border-teal-400'
+                }`}
+              />
+            </div>
+            {errors.email && (
+              <p className="text-xs text-rose-500 dark:text-rose-400 font-medium pt-0.5 animate-fadeIn">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
 
-          <FormInput
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            icon={Lock}
-            register={register('password')}
-            error={errors.password}
-            disabled={isSubmitting}
-          />
+          {/* Password Field */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
+              <Lock size={13} className="text-teal-600 dark:text-teal-400" />
+              <span>Password</span>
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                disabled={isSubmitting}
+                {...register('password')}
+                className={`w-full bg-transparent border-b-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 py-2.5 pl-0 pr-8 focus:outline-none transition-colors duration-200 disabled:opacity-50 ${
+                  errors.password
+                    ? 'border-rose-500 focus:border-rose-500'
+                    : 'border-slate-200 dark:border-slate-700/80 focus:border-teal-500 dark:focus:border-teal-400'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 transition-colors p-1"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-xs text-rose-500 dark:text-rose-400 font-medium pt-0.5 animate-fadeIn">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
 
+          {/* 4. SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all duration-150 shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2"
+            className="w-full mt-8 py-3.5 px-4 bg-teal-600 hover:bg-teal-500 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-full text-xs uppercase tracking-widest transition-all duration-150 shadow-xl shadow-teal-600/30 flex items-center justify-center space-x-2"
           >
             {isSubmitting ? (
               <>
-                <Spinner size={18} />
-                <span>Signing in...</span>
+                <Spinner size={16} />
+                <span>SIGNING IN...</span>
               </>
             ) : (
-              <span>Sign In</span>
+              <span>LOGIN</span>
             )}
           </button>
         </form>
 
-        {/* Footer */}
-        <div className="text-center pt-2 border-t border-slate-100 dark:border-slate-800">
+        {/* 5. FOOTER LINE */}
+        <div className="text-center pt-6 mt-6 border-t border-slate-100 dark:border-[#0e3831] relative z-10">
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Don't have an account?{' '}
             <Link
               to="/signup"
-              className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
+              className="font-semibold text-teal-600 dark:text-teal-400 hover:underline hover:text-teal-500 dark:hover:text-teal-300 transition-colors"
             >
-              Sign up
+              Sign Up
             </Link>
           </p>
         </div>
+
       </div>
+
     </div>
   );
 };
