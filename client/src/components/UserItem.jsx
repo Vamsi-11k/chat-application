@@ -8,6 +8,7 @@ export const UserItem = ({
   isOnline,
   unreadCount = 0,
   lastMessageText = '',
+  isLastMessageDeleted = false,
   lastMessageTime
 }) => {
   const initial = user?.username ? user.username.charAt(0).toUpperCase() : '?';
@@ -75,7 +76,11 @@ export const UserItem = ({
           </div>
           
           {lastMessageText ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 max-w-[170px]">
+            <p className={`text-xs truncate mt-0.5 max-w-[170px] ${
+              isLastMessageDeleted
+                ? 'italic text-slate-400 dark:text-slate-500'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}>
               {lastMessageText}
             </p>
           ) : (

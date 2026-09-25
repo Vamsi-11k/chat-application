@@ -146,13 +146,14 @@ export const Chat = () => {
     }
   };
 
-  // 6. Send Message Action
-  const handleSendMessage = (text) => {
+  // 6. Send Message Action (Supports replyTo)
+  const handleSendMessage = (text, replyToId = null) => {
     if (!socket || !selectedUser) return;
 
     socket.emit('send_message', {
       receiverId: selectedUser._id,
-      text
+      text,
+      replyTo: replyToId
     }, (response) => {
       if (response && !response.success) {
         toast.error(response.error || 'Failed to send message');
@@ -160,7 +161,52 @@ export const Chat = () => {
     });
   };
 
-  // 7. Typing Indicators
+  // 7. Edit Message Action (Feature 1)
+  const handleEditMessage = (messageId, newText) => {
+    if (!socket || !messageId || !newText.trim()) return;
+
+    socket.emit('edit_message', {
+      messageId,
+      text: newText.trim()
+    }, (response) => {
+      if (response && !response.success) {
+        toast.error(response.error || 'Failed to edit message');
+      } else {
+        toast.success('Message updated');
+      }
+    });
+  };
+
+  // 8. Delete Message Action (Feature 1 Soft-Delete)
+  const handleDeleteMessage = (messageId) => {
+    if (!socket || !messageId) return;
+
+    socket.emit('delete_message', {
+      messageId
+    }, (response) => {
+      if (response && !response.success) {
+        toast.error(response.error || 'Failed to delete message');
+      } else {
+        toast.success('Message deleted');
+      }
+    });
+  };
+
+  // 9. Toggle Reaction Action (Feature 2)
+  const handleToggleReaction = (messageId, emoji) => {
+    if (!socket || !messageId || !emoji) return;
+
+    socket.emit('toggle_reaction', {
+      messageId,
+      emoji
+    }, (response) => {
+      if (response && !response.success) {
+        toast.error(response.error || 'Failed to update reaction');
+      }
+    });
+  };
+
+  // 10. Typing Indicators
   const handleTyping = () => {
     if (socket && selectedUser) {
       socket.emit('typing', { receiverId: selectedUser._id });
@@ -173,7 +219,7 @@ export const Chat = () => {
     }
   };
 
-  // 8. Request Management Handlers
+  // 11. Request Management Handlers
   const handleAcceptRequest = async (requestId) => {
     setRequestActionLoading((prev) => ({ ...prev, [requestId]: true }));
     try {
@@ -221,7 +267,7 @@ export const Chat = () => {
     }
   };
 
-  // 9. Clear and Delete Chat Handlers
+  // 12. Clear and Delete Chat Handlers
   const triggerClearChatModal = () => {
     if (!selectedUser) return;
     setModalConfig({
@@ -334,7 +380,7 @@ export const Chat = () => {
     });
   };
 
-  // 10. Socket Event Listeners
+  // 13. Socket Event Listeners (including real-time edit, delete, reaction sync)
   useEffect(() => {
     if (!socket) return;
 
@@ -359,7 +405,7 @@ export const Chat = () => {
               if (senderObj) handleSelectUser(senderObj);
             }}
           >
-            <span className="font-semibold text-indigo-400">
+            <span className="font-semibold text-teal-400">
               {message.sender?.username || 'New message'}:
             </span>
             <span className="truncate max-w-[180px]">{message.text}</span>
@@ -379,6 +425,35 @@ export const Chat = () => {
       }
 
       fetchConversations();
+    };
+
+    // Real-Time Message Edited
+    const handleMessageEdited = ({ message }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === message._id ? { ...m, ...message } : m))
+      );
+      fetchConversations();
+    };
+
+    // Real-Time Message Deleted
+    const handleMessageDeleted = ({ messageId, message }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === messageId ? { ...m, deleted: true, text: '', deletedAt: new Date() } : m
+        )
+      );
+      fetchConversations();
+    };
+
+    // Real-Time Reaction Updated
+    const handleReactionUpdated = ({ messageId, reactions, message }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === messageId
+            ? { ...m, reactions: reactions || message?.reactions || [] }
+            : m
+        )
+      );
     };
 
     const handleUserTyping = ({ senderId }) => {
@@ -441,6 +516,9 @@ export const Chat = () => {
 
     socket.on('receive_message', handleReceiveMessage);
     socket.on('message_sent', handleMessageSent);
+    socket.on('message_edited', handleMessageEdited);
+    socket.on('message_deleted', handleMessageDeleted);
+    socket.on('message_reaction_updated', handleReactionUpdated);
     socket.on('typing', handleUserTyping);
     socket.on('stop_typing', handleUserStopTyping);
     socket.on('message_read', handleMessageRead);
@@ -453,6 +531,9 @@ export const Chat = () => {
     return () => {
       socket.off('receive_message', handleReceiveMessage);
       socket.off('message_sent', handleMessageSent);
+      socket.off('message_edited', handleMessageEdited);
+      socket.off('message_deleted', handleMessageDeleted);
+      socket.off('message_reaction_updated', handleReactionUpdated);
       socket.off('typing', handleUserTyping);
       socket.off('stop_typing', handleUserStopTyping);
       socket.off('message_read', handleMessageRead);
@@ -475,8 +556,8 @@ export const Chat = () => {
   });
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
-      {/* Sidebar: visible on desktop, or mobile when no chat is selected */}
+    <div className="h-screen w-screen overflow-hidden flex bg-slate-50 dark:bg-[#031714] transition-colors duration-200">
+      {/* Sidebar: Columns 1 & 2 (visible on desktop or mobile when no chat is open) */}
       <div
         className={`${
           selectedUser ? 'hidden md:flex' : 'flex'
@@ -502,7 +583,7 @@ export const Chat = () => {
         />
       </div>
 
-      {/* Chat Window: visible on desktop, or mobile when chat is selected */}
+      {/* Chat Window: Column 3 (visible on desktop or mobile when chat is open) */}
       <div
         className={`${
           !selectedUser ? 'hidden md:flex' : 'flex'
@@ -523,6 +604,9 @@ export const Chat = () => {
           onClearChat={triggerClearChatModal}
           onDeleteChat={triggerDeleteChatModal}
           onRemoveFriend={triggerRemoveFriendModal}
+          onEditMessage={handleEditMessage}
+          onDeleteMessage={handleDeleteMessage}
+          onToggleReaction={handleToggleReaction}
         />
       </div>
 

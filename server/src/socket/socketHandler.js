@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { Conversation } from '../models/Conversation.js';
 import { Message } from '../models/Message.js';
+import { populateMessageQuery } from '../controllers/messageController.js';
 
 // Map of userId -> Set of active socket IDs
 const onlineUsers = new Map();
@@ -65,10 +66,10 @@ export const initSocket = (io) => {
     await User.findByIdAndUpdate(userId, { isOnline: true });
     io.emit('user_online', { userId });
 
-    // 1. Send Message Event
+    // 1. Send Message Event (Supports Quote-Reply)
     socket.on('send_message', async (data, callback) => {
       try {
-        const { receiverId, text } = data;
+        const { receiverId, text, replyTo } = data;
 
         if (!receiverId || !text || text.trim() === '') {
           if (callback) callback({ success: false, error: 'Receiver and text are required' });
@@ -99,12 +100,13 @@ export const initSocket = (io) => {
           });
         }
 
-        // Save Message to DB
+        // Save Message to DB with optional replyTo
         const newMessage = await Message.create({
           conversation: conversation._id,
           sender: userId,
           receiver: receiverId,
-          text: text.trim()
+          text: text.trim(),
+          replyTo: replyTo || null
         });
 
         // Update unread count for receiver
@@ -116,11 +118,9 @@ export const initSocket = (io) => {
         conversation.lastMessage = newMessage._id;
         await conversation.save();
 
-        const populatedMessage = await Message.findById(newMessage._id)
-          .populate('sender', '_id username avatarColor')
-          .populate('receiver', '_id username avatarColor');
+        const populatedMessage = await populateMessageQuery(Message.findById(newMessage._id));
 
-        // Emit to receiver's room and sender's room (to sync across all tabs)
+        // Emit to receiver's room and sender's room (to sync across all open tabs)
         io.to(receiverId).emit('receive_message', {
           message: populatedMessage,
           conversationId: conversation._id
@@ -140,7 +140,149 @@ export const initSocket = (io) => {
       }
     });
 
-    // 2. Chat Request Events
+    // 2. Edit Message Event
+    socket.on('edit_message', async (data, callback) => {
+      try {
+        const { messageId, text } = data;
+        if (!messageId || !text || !text.trim()) {
+          if (callback) callback({ success: false, error: 'Message ID and text are required' });
+          return;
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+          if (callback) callback({ success: false, error: 'Message not found' });
+          return;
+        }
+
+        if (message.sender.toString() !== userId) {
+          if (callback) callback({ success: false, error: 'Forbidden: You can only edit your own messages' });
+          return;
+        }
+
+        if (message.deleted) {
+          if (callback) callback({ success: false, error: 'Cannot edit a deleted message' });
+          return;
+        }
+
+        message.text = text.trim();
+        message.edited = true;
+        message.editedAt = new Date();
+        await message.save();
+
+        const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+        io.to(message.sender.toString()).emit('message_edited', { message: populatedMessage });
+        io.to(message.receiver.toString()).emit('message_edited', { message: populatedMessage });
+
+        if (callback) callback({ success: true, message: populatedMessage });
+      } catch (error) {
+        console.error('Socket edit_message error:', error);
+        if (callback) callback({ success: false, error: error.message });
+      }
+    });
+
+    // 3. Delete Message Event (Soft Delete)
+    socket.on('delete_message', async (data, callback) => {
+      try {
+        const { messageId } = data;
+        if (!messageId) {
+          if (callback) callback({ success: false, error: 'Message ID is required' });
+          return;
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+          if (callback) callback({ success: false, error: 'Message not found' });
+          return;
+        }
+
+        if (message.sender.toString() !== userId) {
+          if (callback) callback({ success: false, error: 'Forbidden: You can only delete your own messages' });
+          return;
+        }
+
+        message.deleted = true;
+        message.deletedAt = new Date();
+        message.text = '';
+        await message.save();
+
+        const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+        io.to(message.sender.toString()).emit('message_deleted', {
+          messageId: message._id,
+          conversationId: message.conversation,
+          message: populatedMessage
+        });
+        io.to(message.receiver.toString()).emit('message_deleted', {
+          messageId: message._id,
+          conversationId: message.conversation,
+          message: populatedMessage
+        });
+
+        if (callback) callback({ success: true, message: populatedMessage });
+      } catch (error) {
+        console.error('Socket delete_message error:', error);
+        if (callback) callback({ success: false, error: error.message });
+      }
+    });
+
+    // 4. Toggle Emoji Reaction Event
+    socket.on('toggle_reaction', async (data, callback) => {
+      try {
+        const { messageId, emoji } = data;
+        if (!messageId || !emoji) {
+          if (callback) callback({ success: false, error: 'Message ID and emoji are required' });
+          return;
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message || message.deleted) {
+          if (callback) callback({ success: false, error: 'Valid active message is required' });
+          return;
+        }
+
+        const conversation = await Conversation.findById(message.conversation);
+        if (!conversation || !conversation.participants.some((pId) => pId.toString() === userId)) {
+          if (callback) callback({ success: false, error: 'Forbidden: Not a conversation participant' });
+          return;
+        }
+
+        const existingReactionIndex = message.reactions.findIndex(
+          (r) => r.emoji === emoji && r.user.toString() === userId
+        );
+
+        if (existingReactionIndex > -1) {
+          message.reactions.splice(existingReactionIndex, 1);
+        } else {
+          message.reactions.push({ emoji, user: userId });
+        }
+
+        await message.save();
+
+        const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+        io.to(message.sender.toString()).emit('message_reaction_updated', {
+          messageId: message._id,
+          conversationId: message.conversation,
+          reactions: populatedMessage.reactions,
+          message: populatedMessage
+        });
+        io.to(message.receiver.toString()).emit('message_reaction_updated', {
+          messageId: message._id,
+          conversationId: message.conversation,
+          reactions: populatedMessage.reactions,
+          message: populatedMessage
+        });
+
+        if (callback) callback({ success: true, message: populatedMessage });
+      } catch (error) {
+        console.error('Socket toggle_reaction error:', error);
+        if (callback) callback({ success: false, error: error.message });
+      }
+    });
+
+    // 5. Chat Request Events
     socket.on('send_chat_request', ({ receiverId, request }) => {
       if (receiverId) {
         io.to(receiverId).emit('receive_chat_request', {
@@ -168,7 +310,7 @@ export const initSocket = (io) => {
       }
     });
 
-    // 3. Clear Chat Event
+    // 6. Clear Chat Event
     socket.on('clear_chat', ({ receiverId }) => {
       if (receiverId) {
         io.to(receiverId).emit('chat_cleared', { clearedBy: userId });
@@ -176,7 +318,7 @@ export const initSocket = (io) => {
       }
     });
 
-    // 4. Delete Chat Event
+    // 7. Delete Chat Event
     socket.on('delete_chat', ({ receiverId }) => {
       if (receiverId) {
         io.to(receiverId).emit('chat_deleted', { deletedBy: userId });
@@ -184,12 +326,12 @@ export const initSocket = (io) => {
       }
     });
 
-    // 5. Clear All Chats Event
+    // 8. Clear All Chats Event
     socket.on('clear_all_chats', () => {
       io.to(userId).emit('all_chats_cleared');
     });
 
-    // 6. Typing Indicator
+    // 9. Typing Indicator
     socket.on('typing', ({ receiverId }) => {
       if (receiverId) {
         io.to(receiverId).emit('typing', {
@@ -199,7 +341,7 @@ export const initSocket = (io) => {
       }
     });
 
-    // 7. Stop Typing Indicator
+    // 10. Stop Typing Indicator
     socket.on('stop_typing', ({ receiverId }) => {
       if (receiverId) {
         io.to(receiverId).emit('stop_typing', {
@@ -208,7 +350,7 @@ export const initSocket = (io) => {
       }
     });
 
-    // 8. Message Read Acknowledgement
+    // 11. Message Read Acknowledgement
     socket.on('message_read', async ({ senderId }) => {
       try {
         if (!senderId) return;
@@ -248,7 +390,7 @@ export const initSocket = (io) => {
       }
     });
 
-    // 5. Disconnect Event
+    // 12. Disconnect Event
     socket.on('disconnect', async () => {
       const userSockets = onlineUsers.get(userId);
       if (userSockets) {

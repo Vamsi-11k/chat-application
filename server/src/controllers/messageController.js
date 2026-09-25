@@ -5,6 +5,22 @@ import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
+// Helper function to populate message completely
+export const populateMessageQuery = (query) => {
+  return query
+    .populate('sender', '_id username avatarColor')
+    .populate('receiver', '_id username avatarColor')
+    .populate('reactions.user', '_id username avatarColor')
+    .populate({
+      path: 'replyTo',
+      select: '_id sender text deleted',
+      populate: {
+        path: 'sender',
+        select: '_id username avatarColor'
+      }
+    });
+};
+
 export const getConversations = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id;
 
@@ -90,13 +106,12 @@ export const getMessages = asyncHandler(async (req, res) => {
   const hasMore = page < totalPages;
 
   // Retrieve descending to get the newest chunk, then reverse for chronological display
-  const messages = await Message.find({ conversation: conversation._id })
+  const messagesQuery = Message.find({ conversation: conversation._id })
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit)
-    .populate('sender', '_id username avatarColor')
-    .populate('receiver', '_id username avatarColor');
+    .limit(limit);
 
+  const messages = await populateMessageQuery(messagesQuery);
   const chronologicalMessages = messages.reverse();
 
   res.status(200).json({
@@ -162,6 +177,238 @@ export const markMessagesAsRead = asyncHandler(async (req, res) => {
     data: {
       conversationId: conversation._id,
       readAt: readDate
+    }
+  });
+});
+
+// FEATURE 1: Edit Message
+export const editMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+  const { text } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  if (!text || text.trim() === '') {
+    throw new ApiError(400, 'Message text cannot be empty');
+  }
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  if (message.sender.toString() !== currentUserId.toString()) {
+    throw new ApiError(403, 'Forbidden: You can only edit your own messages');
+  }
+
+  if (message.deleted) {
+    throw new ApiError(400, 'Cannot edit a deleted message');
+  }
+
+  message.text = text.trim();
+  message.edited = true;
+  message.editedAt = new Date();
+  await message.save();
+
+  const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+  // Broadcast through socket
+  const io = req.app.get('io');
+  if (io) {
+    io.to(message.sender.toString()).emit('message_edited', { message: populatedMessage });
+    io.to(message.receiver.toString()).emit('message_edited', { message: populatedMessage });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Message edited successfully',
+    data: {
+      message: populatedMessage
+    }
+  });
+});
+
+// FEATURE 1: Soft-Delete Message
+export const deleteMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  if (message.sender.toString() !== currentUserId.toString()) {
+    throw new ApiError(403, 'Forbidden: You can only delete your own messages');
+  }
+
+  message.deleted = true;
+  message.deletedAt = new Date();
+  message.text = '';
+  await message.save();
+
+  const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+  // Broadcast through socket
+  const io = req.app.get('io');
+  if (io) {
+    io.to(message.sender.toString()).emit('message_deleted', {
+      messageId: message._id,
+      conversationId: message.conversation,
+      message: populatedMessage
+    });
+    io.to(message.receiver.toString()).emit('message_deleted', {
+      messageId: message._id,
+      conversationId: message.conversation,
+      message: populatedMessage
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Message deleted successfully',
+    data: {
+      message: populatedMessage
+    }
+  });
+});
+
+// FEATURE 2: Toggle Emoji Reaction
+export const toggleReaction = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+  const { emoji } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  if (!emoji || typeof emoji !== 'string') {
+    throw new ApiError(400, 'Valid emoji is required');
+  }
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  if (message.deleted) {
+    throw new ApiError(400, 'Cannot react to a deleted message');
+  }
+
+  // Verify user is a conversation participant
+  const conversation = await Conversation.findById(message.conversation);
+  if (!conversation || !conversation.participants.some((pId) => pId.toString() === currentUserId.toString())) {
+    throw new ApiError(403, 'Forbidden: You are not a participant in this conversation');
+  }
+
+  // Check if user already reacted with this exact emoji
+  const existingReactionIndex = message.reactions.findIndex(
+    (r) => r.emoji === emoji && r.user.toString() === currentUserId.toString()
+  );
+
+  if (existingReactionIndex > -1) {
+    // Remove (toggle off)
+    message.reactions.splice(existingReactionIndex, 1);
+  } else {
+    // Add reaction
+    message.reactions.push({
+      emoji,
+      user: currentUserId
+    });
+  }
+
+  await message.save();
+
+  const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+  // Broadcast reaction update
+  const io = req.app.get('io');
+  if (io) {
+    io.to(message.sender.toString()).emit('message_reaction_updated', {
+      messageId: message._id,
+      conversationId: message.conversation,
+      reactions: populatedMessage.reactions,
+      message: populatedMessage
+    });
+    io.to(message.receiver.toString()).emit('message_reaction_updated', {
+      messageId: message._id,
+      conversationId: message.conversation,
+      reactions: populatedMessage.reactions,
+      message: populatedMessage
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Reaction updated successfully',
+    data: {
+      message: populatedMessage
+    }
+  });
+});
+
+// FEATURE 4: In-Thread Message Search
+export const searchInConversation = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { userId: otherUserId } = req.params;
+  const { q } = req.query;
+
+  if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
+    throw new ApiError(400, 'Invalid participant user ID');
+  }
+
+  if (!q || !q.trim()) {
+    return res.status(200).json({
+      success: true,
+      message: 'Search query empty',
+      data: {
+        results: []
+      }
+    });
+  }
+
+  const conversation = await Conversation.findOne({
+    participants: { $all: [currentUserId, otherUserId] }
+  });
+
+  if (!conversation) {
+    return res.status(200).json({
+      success: true,
+      message: 'Conversation not found',
+      data: {
+        results: []
+      }
+    });
+  }
+
+  // Search non-deleted messages matching query string
+  const searchQuery = q.trim();
+  const searchRegex = new RegExp(searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i');
+
+  const messages = await Message.find({
+    conversation: conversation._id,
+    deleted: false,
+    text: { $regex: searchRegex }
+  })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .populate('sender', '_id username avatarColor');
+
+  res.status(200).json({
+    success: true,
+    message: 'Search results retrieved',
+    data: {
+      conversationId: conversation._id,
+      totalResults: messages.length,
+      results: messages
     }
   });
 });
@@ -254,4 +501,3 @@ export const clearAllConversations = asyncHandler(async (req, res) => {
     data: null
   });
 });
-

@@ -44,9 +44,15 @@ export const Sidebar = ({
   const conversationMap = new Map();
   conversations.forEach((c) => {
     if (c.otherParticipant?._id) {
+      const isDeleted = !!c.lastMessage?.deleted;
+      const text = isDeleted
+        ? 'This message was deleted'
+        : c.lastMessage?.text || '';
+
       conversationMap.set(c.otherParticipant._id, {
         unreadCount: c.unreadCount || 0,
-        lastMessageText: c.lastMessage?.text || '',
+        lastMessageText: text,
+        isLastMessageDeleted: isDeleted,
         lastMessageTime: c.lastMessage?.createdAt || c.updatedAt
       });
     }
@@ -298,6 +304,7 @@ export const Sidebar = ({
                       isOnline={isOnline}
                       unreadCount={convData.unreadCount || 0}
                       lastMessageText={convData.lastMessageText || ''}
+                      isLastMessageDeleted={convData.isLastMessageDeleted}
                       lastMessageTime={convData.lastMessageTime}
                       onClick={() => onSelectUser(f)}
                     />

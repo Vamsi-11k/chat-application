@@ -42,6 +42,9 @@ const io = new Server(server, {
   transports: ['websocket', 'polling']
 });
 
+// Attach io to express app for controller access
+app.set('io', io);
+
 // Setup Socket events
 initSocket(io);
 

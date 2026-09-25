@@ -19,12 +19,52 @@ const messageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: [true, 'Message text is required'],
+      default: '',
       trim: true,
       maxlength: [2000, 'Message cannot exceed 2000 characters']
     },
     readAt: {
       type: Date,
+      default: null
+    },
+
+    // Feature 1: Editing & Soft-Deletion
+    edited: {
+      type: Boolean,
+      default: false
+    },
+    editedAt: {
+      type: Date,
+      default: null
+    },
+    deleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date,
+      default: null
+    },
+
+    // Feature 2: Emoji Reactions (Multi-Emoji per user with toggle)
+    reactions: [
+      {
+        emoji: {
+          type: String,
+          required: true
+        },
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true
+        }
+      }
+    ],
+
+    // Feature 3: Quote-Reply to a Message
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message',
       default: null
     }
   },
@@ -34,5 +74,7 @@ const messageSchema = new mongoose.Schema(
 );
 
 messageSchema.index({ conversation: 1, createdAt: -1 });
+// Text index for In-Thread Message Search
+messageSchema.index({ text: 'text' });
 
 export const Message = mongoose.model('Message', messageSchema);

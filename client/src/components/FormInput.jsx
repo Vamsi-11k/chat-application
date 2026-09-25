@@ -39,7 +39,7 @@ export const FormInput = ({
           } ${isPassword ? 'pr-11' : 'pr-4'} py-3 ${
             error
               ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/20'
-              : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/20'
+              : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-teal-500 focus:ring-teal-500/20'
           }`}
         />
 
