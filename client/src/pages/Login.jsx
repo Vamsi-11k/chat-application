@@ -37,7 +37,7 @@ export const Login = () => {
     const res = await login(data);
     setIsSubmitting(false);
     if (res.success) {
-      navigate('/');
+      navigate('/chat');
     }
   };
 

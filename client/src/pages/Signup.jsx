@@ -50,7 +50,7 @@ export const Signup = () => {
     const res = await signup(data);
     setIsSubmitting(false);
     if (res.success) {
-      navigate('/');
+      navigate('/chat');
     }
   };
 

@@ -5,6 +5,7 @@ import { useTheme } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
+import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Chat } from './pages/Chat';
@@ -17,7 +18,10 @@ export default function App() {
     <AuthProvider>
       <SocketProvider>
         <Routes>
-          {/* Public Routes */}
+          {/* Landing Page Entry Point */}
+          <Route path="/" element={<Landing />} />
+
+          {/* Public Authentication Routes */}
           <Route
             path="/login"
             element={
@@ -34,10 +38,18 @@ export default function App() {
               </PublicRoute>
             }
           />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Signup />
+              </PublicRoute>
+            }
+          />
 
-          {/* Protected Routes */}
+          {/* Protected Chat App Route */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Chat />} />
+            <Route path="/chat" element={<Chat />} />
           </Route>
 
           {/* Fallback 404 */}

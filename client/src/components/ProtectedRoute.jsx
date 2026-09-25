@@ -25,7 +25,7 @@ export const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/chat" replace />;
   }
 
   return children;
