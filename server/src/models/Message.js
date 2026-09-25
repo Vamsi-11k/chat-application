@@ -46,7 +46,7 @@ const messageSchema = new mongoose.Schema(
       default: null
     },
 
-    // Feature 2: Emoji Reactions (Multi-Emoji per user with toggle)
+    // Feature 2: Emoji Reactions (Multi-Emoji per user with toggle and timestamp)
     reactions: [
       {
         emoji: {
@@ -57,6 +57,10 @@ const messageSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: 'User',
           required: true
+        },
+        reactedAt: {
+          type: Date,
+          default: Date.now
         }
       }
     ],
@@ -74,7 +78,6 @@ const messageSchema = new mongoose.Schema(
 );
 
 messageSchema.index({ conversation: 1, createdAt: -1 });
-// Text index for In-Thread Message Search
 messageSchema.index({ text: 'text' });
 
 export const Message = mongoose.model('Message', messageSchema);

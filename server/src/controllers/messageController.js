@@ -321,7 +321,8 @@ export const toggleReaction = asyncHandler(async (req, res) => {
     // Add reaction
     message.reactions.push({
       emoji,
-      user: currentUserId
+      user: currentUserId,
+      reactedAt: new Date()
     });
   }
 

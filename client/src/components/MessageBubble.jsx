@@ -7,9 +7,7 @@ import {
   Reply,
   Pencil,
   Trash2,
-  X,
-  CornerDownRight,
-  MoreHorizontal
+  CornerDownRight
 } from 'lucide-react';
 
 const COMMON_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -28,7 +26,6 @@ export const MessageBubble = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message.text || '');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const formattedTime = message.createdAt
     ? format(new Date(message.createdAt), 'h:mm a')
@@ -38,7 +35,7 @@ export const MessageBubble = ({
   const isDeleted = !!message.deleted;
   const isEdited = !!message.edited && !isDeleted;
 
-  // Group reactions: Map of emoji -> { count, hasReacted, users: [] }
+  // Group reactions: Map of emoji -> { emoji, count, hasReacted, usernames: [] }
   const reactionGroups = (message.reactions || []).reduce((acc, r) => {
     if (!acc[r.emoji]) {
       acc[r.emoji] = {
@@ -61,6 +58,7 @@ export const MessageBubble = ({
   }, {});
 
   const reactionList = Object.values(reactionGroups);
+  const hasReactions = reactionList.length > 0 && !isDeleted;
 
   const handleSaveEdit = (e) => {
     e.preventDefault();
@@ -77,37 +75,39 @@ export const MessageBubble = ({
       id={`message-${message._id}`}
       className={`group relative flex w-full ${
         isOwn ? 'justify-end' : 'justify-start'
-      } my-1 transition-all duration-300 ${
+      } ${hasReactions ? 'mb-4 mt-1' : 'my-1'} transition-all duration-300 ${
         isHighlighted ? 'ring-2 ring-teal-400 dark:ring-teal-300 rounded-2xl bg-teal-500/10 dark:bg-teal-500/20 p-1' : ''
       }`}
     >
       <div className={`relative max-w-[85%] sm:max-w-[70%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
         
-        {/* Floating Action Menu (Hover on desktop / Click on mobile) */}
+        {/* Floating Action Menu Bar (Appears on Hover for BOTH Sent & Received Messages) */}
         {!isDeleted && !isEditing && (
           <div
             className={`absolute -top-7 ${
               isOwn ? 'right-2' : 'left-2'
-            } hidden group-hover:flex items-center space-x-1 bg-white dark:bg-[#061e1a] border border-teal-100 dark:border-[#0f3d37] px-1.5 py-0.5 rounded-full shadow-lg z-20 animate-fadeIn`}
+            } hidden group-hover:flex items-center space-x-1 bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100 dark:border-[#0f3d37] px-1.5 py-0.5 rounded-full shadow-lg z-20 backdrop-blur-md animate-fadeIn`}
           >
-            {/* Reaction Trigger */}
+            {/* Reaction Trigger Button */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                title="Add reaction"
-                className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full transition-colors"
+                title="React to message"
+                aria-label="React to message"
+                className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full hover:bg-teal-50 dark:hover:bg-[#0c2a25] transition-colors"
               >
                 <Smile size={14} />
               </button>
 
+              {/* Compact Floating Emoji Palette (WhatsApp Style 6 Emojis) */}
               {showEmojiPicker && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setShowEmojiPicker(false)} />
                   <div
                     className={`absolute bottom-full mb-1.5 ${
                       isOwn ? 'right-0' : 'left-0'
-                    } flex items-center space-x-1 bg-white dark:bg-[#061e1a] border border-teal-100 dark:border-[#0f3d37] p-1.5 rounded-full shadow-xl z-40 animate-scaleUp`}
+                    } flex items-center space-x-1 bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100 dark:border-[#0f3d37] p-1.5 rounded-full shadow-2xl z-40 backdrop-blur-md animate-scaleUp`}
                   >
                     {COMMON_EMOJIS.map((emoji) => (
                       <button
@@ -117,7 +117,7 @@ export const MessageBubble = ({
                           onToggleReaction(message._id, emoji);
                           setShowEmojiPicker(false);
                         }}
-                        className="w-7 h-7 flex items-center justify-center hover:scale-125 transition-transform text-base"
+                        className="w-7 h-7 flex items-center justify-center hover:scale-130 transition-transform text-base active:scale-95"
                       >
                         {emoji}
                       </button>
@@ -127,17 +127,18 @@ export const MessageBubble = ({
               )}
             </div>
 
-            {/* Reply Trigger */}
+            {/* Reply Action (Available for Both Sent & Received) */}
             <button
               type="button"
               onClick={() => onReply(message)}
-              title="Reply"
-              className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full transition-colors"
+              title="Reply to message"
+              aria-label="Reply to message"
+              className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full hover:bg-teal-50 dark:hover:bg-[#0c2a25] transition-colors"
             >
               <Reply size={14} />
             </button>
 
-            {/* Edit Trigger (Sender Only) */}
+            {/* Edit Action (Sender Only) */}
             {isOwn && (
               <button
                 type="button"
@@ -146,19 +147,21 @@ export const MessageBubble = ({
                   setIsEditing(true);
                 }}
                 title="Edit message"
-                className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full transition-colors"
+                aria-label="Edit message"
+                className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full hover:bg-teal-50 dark:hover:bg-[#0c2a25] transition-colors"
               >
                 <Pencil size={13} />
               </button>
             )}
 
-            {/* Delete Trigger (Sender Only) */}
+            {/* Delete Action (Sender Only) */}
             {isOwn && (
               <button
                 type="button"
                 onClick={() => onDelete(message._id)}
                 title="Delete message"
-                className="p-1 text-slate-400 hover:text-rose-500 rounded-full transition-colors"
+                aria-label="Delete message"
+                className="p-1 text-slate-400 hover:text-rose-500 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
               >
                 <Trash2 size={13} />
               </button>
@@ -166,7 +169,7 @@ export const MessageBubble = ({
           </div>
         )}
 
-        {/* Main Bubble */}
+        {/* Message Bubble Body */}
         <div
           className={`relative px-4 py-2.5 rounded-2xl shadow-xs text-sm break-words transition-all duration-150 ${
             isDeleted
@@ -176,7 +179,7 @@ export const MessageBubble = ({
               : 'bg-white dark:bg-[#0c2a25] text-slate-800 dark:text-slate-100 border border-teal-100/80 dark:border-[#14423a] rounded-bl-xs shadow-xs'
           }`}
         >
-          {/* Quote-Reply Header Banner (if message replies to another) */}
+          {/* Quote-Reply Header Banner */}
           {message.replyTo && !isDeleted && (
             <div
               onClick={() => {
@@ -206,7 +209,7 @@ export const MessageBubble = ({
             </div>
           )}
 
-          {/* Inline Edit Form */}
+          {/* Inline Edit Mode */}
           {isEditing ? (
             <form onSubmit={handleSaveEdit} className="space-y-2 min-w-[220px]">
               <textarea
@@ -234,18 +237,18 @@ export const MessageBubble = ({
               </div>
             </form>
           ) : isDeleted ? (
-            /* Deleted message content */
+            /* Deleted notice */
             <p className="select-none flex items-center space-x-1 text-xs">
               <span>This message was deleted</span>
             </p>
           ) : (
-            /* Standard text content */
+            /* Standard text message */
             <p className="whitespace-pre-wrap leading-relaxed selection:bg-teal-500/30 dark:selection:bg-white/20">
               {message.text}
             </p>
           )}
 
-          {/* Timestamp, Edited Badge & Read Receipts */}
+          {/* Timestamp, Edited Flag & Read Status */}
           <div
             className={`flex items-center justify-end space-x-1.5 mt-1 text-[10px] select-none ${
               isOwn ? 'text-teal-100' : 'text-slate-400 dark:text-slate-400'
@@ -263,29 +266,46 @@ export const MessageBubble = ({
               </span>
             )}
           </div>
-        </div>
 
-        {/* Reactions Pills Row */}
-        {reactionList.length > 0 && !isDeleted && (
-          <div className={`flex flex-wrap items-center gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-            {reactionList.map((r) => (
-              <button
-                key={r.emoji}
-                type="button"
-                onClick={() => onToggleReaction(message._id, r.emoji)}
-                title={r.usernames.length > 0 ? r.usernames.join(', ') : 'Reactions'}
-                className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium border transition-all active:scale-95 ${
-                  r.hasReacted
-                    ? 'bg-teal-100 dark:bg-teal-950/80 border-teal-400 text-teal-800 dark:text-teal-300 font-bold shadow-xs'
-                    : 'bg-white dark:bg-[#0c2a25] border-teal-100/80 dark:border-[#14423a] text-slate-700 dark:text-slate-300 hover:border-teal-300'
-                }`}
-              >
-                <span>{r.emoji}</span>
-                {r.count > 1 && <span className="text-[10px] ml-0.5">{r.count}</span>}
-              </button>
-            ))}
-          </div>
-        )}
+          {/* Overlapping WhatsApp-Style Reaction Pill Badge (Bottom-Right on Bubble) */}
+          {hasReactions && (
+            <div
+              className={`absolute -bottom-2.5 ${
+                isOwn ? 'right-2' : 'left-2'
+              } flex items-center space-x-1 bg-white dark:bg-[#061e1a] border border-teal-100 dark:border-[#0f3d37] px-1.5 py-0.5 rounded-full shadow-md z-10`}
+            >
+              {reactionList.map((r) => {
+                const tooltipText =
+                  r.usernames.length > 0
+                    ? `${r.usernames.join(', ')} reacted with ${r.emoji}`
+                    : `Reacted with ${r.emoji}`;
+
+                return (
+                  <button
+                    key={r.emoji}
+                    type="button"
+                    onClick={() => onToggleReaction(message._id, r.emoji)}
+                    title={tooltipText}
+                    aria-label={tooltipText}
+                    className={`inline-flex items-center space-x-0.5 px-1 py-0.2 rounded-full text-xs font-medium transition-all active:scale-90 ${
+                      r.hasReacted
+                        ? 'text-teal-700 dark:text-teal-300 font-bold'
+                        : 'text-slate-700 dark:text-slate-300 opacity-90'
+                    }`}
+                  >
+                    <span className="text-[13px]">{r.emoji}</span>
+                    {r.count > 1 && (
+                      <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 pl-0.5">
+                        {r.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
 
       </div>
     </div>

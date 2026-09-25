@@ -255,7 +255,7 @@ export const initSocket = (io) => {
         if (existingReactionIndex > -1) {
           message.reactions.splice(existingReactionIndex, 1);
         } else {
-          message.reactions.push({ emoji, user: userId });
+          message.reactions.push({ emoji, user: userId, reactedAt: new Date() });
         }
 
         await message.save();
