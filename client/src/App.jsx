@@ -10,13 +10,52 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Chat } from './pages/Chat';
 import { NotFound } from './pages/NotFound';
+import { AmbientBackground } from './components/AmbientBackground';
 
 export default function App() {
-  const { isDark } = useTheme();
+  const { isDark, theme } = useTheme();
+
+  const getToastStyle = () => {
+    switch (theme) {
+      case 'anime':
+        return {
+          background: '#200c33',
+          color: '#fdf2f8',
+          border: '1px solid #4c1d78',
+          boxShadow: '0 10px 25px -5px rgba(236, 72, 153, 0.4)'
+        };
+      case 'nostalgic':
+        return {
+          background: '#181036',
+          color: '#fdf4ff',
+          border: '1px solid #3b2875',
+          boxShadow: '0 10px 25px -5px rgba(6, 182, 212, 0.4)'
+        };
+      case 'dark':
+        return {
+          background: '#072420',
+          color: '#f0fdfa',
+          border: '1px solid #14423a',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.6)'
+        };
+      default:
+        return {
+          background: '#ffffff',
+          color: '#0f172a',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08)'
+        };
+    }
+  };
+
+  const toastStyle = getToastStyle();
 
   return (
     <AuthProvider>
       <SocketProvider>
+        {/* Subtle Ambient Background Layer (Off by default, theme-aware, auto-pausing) */}
+        <AmbientBackground />
+
         <Routes>
           {/* Landing Page Entry Point */}
           <Route path="/" element={<Landing />} />
@@ -61,19 +100,14 @@ export default function App() {
           position="top-center"
           toastOptions={{
             style: {
-              background: isDark ? '#0f172a' : '#ffffff',
-              color: isDark ? '#f8fafc' : '#0f172a',
-              border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
+              ...toastStyle,
               fontSize: '13px',
               borderRadius: '12px',
-              padding: '12px 16px',
-              boxShadow: isDark
-                ? '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
-                : '0 10px 25px -5px rgba(0, 0, 0, 0.08)'
+              padding: '12px 16px'
             },
             success: {
               iconTheme: {
-                primary: '#10b981',
+                primary: theme === 'anime' ? '#ec4899' : theme === 'nostalgic' ? '#06b6d4' : '#10b981',
                 secondary: isDark ? '#0f172a' : '#ffffff'
               }
             },

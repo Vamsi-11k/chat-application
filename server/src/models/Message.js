@@ -70,6 +70,43 @@ const messageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Message',
       default: null
+    },
+
+    // Feature 4: Message Forwarding
+    forwardedFrom: {
+      type: {
+        originalSender: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          default: null
+        },
+        originalSenderName: {
+          type: String,
+          default: null
+        },
+        originalConversationId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Conversation',
+          default: null
+        }
+      },
+      _id: false,
+      default: null
+    },
+
+    // Feature 5: Pinned Messages (Shared per-conversation)
+    pinned: {
+      type: Boolean,
+      default: false
+    },
+    pinnedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    pinnedAt: {
+      type: Date,
+      default: null
     }
   },
   {

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Conversation } from '../models/Conversation.js';
 import { Message } from '../models/Message.js';
 import { User } from '../models/User.js';
+import { StarredMessage } from '../models/StarredMessage.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -11,6 +12,8 @@ export const populateMessageQuery = (query) => {
     .populate('sender', '_id username avatarColor')
     .populate('receiver', '_id username avatarColor')
     .populate('reactions.user', '_id username avatarColor')
+    .populate('pinnedBy', '_id username avatarColor')
+    .populate('forwardedFrom.originalSender', '_id username avatarColor')
     .populate({
       path: 'replyTo',
       select: '_id sender text deleted',
@@ -231,7 +234,7 @@ export const editMessage = asyncHandler(async (req, res) => {
   });
 });
 
-// FEATURE 1: Soft-Delete Message
+// FEATURE 1: Soft-Delete Message (Automatically unpins if pinned)
 export const deleteMessage = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id;
   const { id: messageId } = req.params;
@@ -249,9 +252,14 @@ export const deleteMessage = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Forbidden: You can only delete your own messages');
   }
 
+  const wasPinned = message.pinned;
+
   message.deleted = true;
   message.deletedAt = new Date();
   message.text = '';
+  message.pinned = false;
+  message.pinnedBy = null;
+  message.pinnedAt = null;
   await message.save();
 
   const populatedMessage = await populateMessageQuery(Message.findById(message._id));
@@ -269,6 +277,17 @@ export const deleteMessage = asyncHandler(async (req, res) => {
       conversationId: message.conversation,
       message: populatedMessage
     });
+
+    if (wasPinned) {
+      io.to(message.sender.toString()).emit('message_unpinned', {
+        messageId: message._id,
+        conversationId: message.conversation
+      });
+      io.to(message.receiver.toString()).emit('message_unpinned', {
+        messageId: message._id,
+        conversationId: message.conversation
+      });
+    }
   }
 
   res.status(200).json({
@@ -356,6 +375,400 @@ export const toggleReaction = asyncHandler(async (req, res) => {
   });
 });
 
+// FEATURE: Message Forwarding
+export const forwardMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+  const { targetConversationIds } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid source message ID');
+  }
+
+  if (!Array.isArray(targetConversationIds) || targetConversationIds.length === 0) {
+    throw new ApiError(400, 'Please select at least one target conversation to forward to');
+  }
+
+  // Validate original message
+  const originalMessage = await Message.findById(messageId).populate('sender', 'username avatarColor');
+  if (!originalMessage) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  if (originalMessage.deleted) {
+    throw new ApiError(400, 'Cannot forward a deleted message');
+  }
+
+  // Verify the requesting user is a participant in the original message's conversation
+  const sourceConversation = await Conversation.findById(originalMessage.conversation);
+  if (
+    !sourceConversation ||
+    !sourceConversation.participants.some((pId) => pId.toString() === currentUserId.toString())
+  ) {
+    throw new ApiError(403, 'Forbidden: You are not a participant in the original message conversation');
+  }
+
+  // Original sender attribution details (preserve root attribution if already forwarded)
+  const origSenderId =
+    originalMessage.forwardedFrom?.originalSender || originalMessage.sender?._id || originalMessage.sender;
+  const origSenderName =
+    originalMessage.forwardedFrom?.originalSenderName || originalMessage.sender?.username || 'Unknown';
+
+  const io = req.app.get('io');
+  const createdMessages = [];
+
+  for (const targetConvId of targetConversationIds) {
+    if (!mongoose.Types.ObjectId.isValid(targetConvId)) continue;
+
+    const targetConv = await Conversation.findById(targetConvId);
+    if (
+      !targetConv ||
+      !targetConv.participants.some((pId) => pId.toString() === currentUserId.toString())
+    ) {
+      // Skip conversations user is not a participant in (enforce friend gating)
+      continue;
+    }
+
+    const receiverId = targetConv.participants.find(
+      (pId) => pId.toString() !== currentUserId.toString()
+    );
+    if (!receiverId) continue;
+
+    // Create fresh message copy with forwardedFrom attribution (no reactions, no replyTo, fresh read status)
+    const newMsg = await Message.create({
+      conversation: targetConv._id,
+      sender: currentUserId,
+      receiver: receiverId,
+      text: originalMessage.text,
+      forwardedFrom: {
+        originalSender: origSenderId,
+        originalSenderName: origSenderName,
+        originalConversationId: sourceConversation._id
+      }
+    });
+
+    // Update target conversation metadata
+    targetConv.lastMessage = newMsg._id;
+    if (!targetConv.unreadCounts) targetConv.unreadCounts = new Map();
+    const currentUnread = targetConv.unreadCounts.get(receiverId.toString()) || 0;
+    targetConv.unreadCounts.set(receiverId.toString(), currentUnread + 1);
+    await targetConv.save();
+
+    const populatedMsg = await populateMessageQuery(Message.findById(newMsg._id));
+    createdMessages.push(populatedMsg);
+
+    // Emit standard new_message event for both participants so thread and sidebar update live
+    if (io) {
+      io.to(receiverId.toString()).emit('new_message', {
+        message: populatedMsg,
+        conversationId: targetConv._id
+      });
+      io.to(currentUserId.toString()).emit('new_message', {
+        message: populatedMsg,
+        conversationId: targetConv._id
+      });
+    }
+  }
+
+  res.status(201).json({
+    success: true,
+    message: `Message forwarded to ${createdMessages.length} conversation(s)`,
+    data: {
+      forwardedMessages: createdMessages
+    }
+  });
+});
+
+// FEATURE: Pinned Messages (Shared per-conversation, Max 5 Limit with Block)
+export const pinMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  if (message.deleted) {
+    throw new ApiError(400, 'Cannot pin a deleted message');
+  }
+
+  const conversation = await Conversation.findById(message.conversation);
+  if (
+    !conversation ||
+    !conversation.participants.some((pId) => pId.toString() === currentUserId.toString())
+  ) {
+    throw new ApiError(403, 'Forbidden: You are not a participant in this conversation');
+  }
+
+  if (message.pinned) {
+    const populated = await populateMessageQuery(Message.findById(message._id));
+    return res.status(200).json({
+      success: true,
+      message: 'Message is already pinned',
+      data: { message: populated }
+    });
+  }
+
+  // Enforce Max 5 Pins per conversation: Block new pins if limit reached
+  const activePinsCount = await Message.countDocuments({
+    conversation: message.conversation,
+    pinned: true,
+    deleted: false
+  });
+
+  if (activePinsCount >= 5) {
+    throw new ApiError(400, 'Maximum 5 pinned messages reached. Unpin a message to pin another.');
+  }
+
+  message.pinned = true;
+  message.pinnedBy = currentUserId;
+  message.pinnedAt = new Date();
+  await message.save();
+
+  const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+  // Emit message_pinned event to both participants
+  const io = req.app.get('io');
+  if (io) {
+    io.to(message.sender.toString()).emit('message_pinned', {
+      message: populatedMessage,
+      conversationId: message.conversation
+    });
+    io.to(message.receiver.toString()).emit('message_pinned', {
+      message: populatedMessage,
+      conversationId: message.conversation
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Message pinned successfully',
+    data: {
+      message: populatedMessage
+    }
+  });
+});
+
+export const unpinMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  const conversation = await Conversation.findById(message.conversation);
+  if (
+    !conversation ||
+    !conversation.participants.some((pId) => pId.toString() === currentUserId.toString())
+  ) {
+    throw new ApiError(403, 'Forbidden: You are not a participant in this conversation');
+  }
+
+  message.pinned = false;
+  message.pinnedBy = null;
+  message.pinnedAt = null;
+  await message.save();
+
+  const populatedMessage = await populateMessageQuery(Message.findById(message._id));
+
+  // Emit message_unpinned event to both participants
+  const io = req.app.get('io');
+  if (io) {
+    io.to(message.sender.toString()).emit('message_unpinned', {
+      messageId: message._id,
+      conversationId: message.conversation
+    });
+    io.to(message.receiver.toString()).emit('message_unpinned', {
+      messageId: message._id,
+      conversationId: message.conversation
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Message unpinned successfully',
+    data: {
+      message: populatedMessage
+    }
+  });
+});
+
+export const getPinnedMessages = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { userId: otherUserId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
+    throw new ApiError(400, 'Invalid participant user ID');
+  }
+
+  const conversation = await Conversation.findOne({
+    participants: { $all: [currentUserId, otherUserId] }
+  });
+
+  if (!conversation) {
+    return res.status(200).json({
+      success: true,
+      message: 'No pinned messages found',
+      data: { pinnedMessages: [] }
+    });
+  }
+
+  const pinnedQuery = Message.find({
+    conversation: conversation._id,
+    pinned: true,
+    deleted: false
+  }).sort({ pinnedAt: -1 });
+
+  const pinnedMessages = await populateMessageQuery(pinnedQuery);
+
+  res.status(200).json({
+    success: true,
+    message: 'Pinned messages retrieved',
+    data: {
+      conversationId: conversation._id,
+      pinnedMessages
+    }
+  });
+});
+
+// FEATURE: Starred Messages (Personal, Private, Multi-tab synced)
+export const starMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new ApiError(404, 'Message not found');
+  }
+
+  const conversation = await Conversation.findById(message.conversation);
+  if (
+    !conversation ||
+    !conversation.participants.some((pId) => pId.toString() === currentUserId.toString())
+  ) {
+    throw new ApiError(403, 'Forbidden: You are not a participant in this conversation');
+  }
+
+  const starred = await StarredMessage.findOneAndUpdate(
+    { user: currentUserId, message: messageId },
+    {
+      user: currentUserId,
+      message: messageId,
+      conversation: message.conversation,
+      starredAt: new Date()
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+
+  // Sync to the user's own sockets across all their devices/tabs
+  const io = req.app.get('io');
+  if (io) {
+    io.to(currentUserId.toString()).emit('message_starred', {
+      messageId: message._id,
+      conversationId: message.conversation
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Message starred successfully',
+    data: {
+      starredId: starred._id,
+      messageId: message._id
+    }
+  });
+});
+
+export const unstarMessage = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const { id: messageId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new ApiError(400, 'Invalid message ID');
+  }
+
+  await StarredMessage.findOneAndDelete({
+    user: currentUserId,
+    message: messageId
+  });
+
+  // Sync to user's personal socket room
+  const io = req.app.get('io');
+  if (io) {
+    io.to(currentUserId.toString()).emit('message_unstarred', {
+      messageId
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Message unstarred successfully',
+    data: { messageId }
+  });
+});
+
+export const getStarredMessages = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+
+  const starredDocs = await StarredMessage.find({ user: currentUserId })
+    .populate({
+      path: 'message',
+      populate: [
+        { path: 'sender', select: '_id username avatarColor' },
+        { path: 'receiver', select: '_id username avatarColor' },
+        { path: 'forwardedFrom.originalSender', select: '_id username' }
+      ]
+    })
+    .populate({
+      path: 'conversation',
+      populate: {
+        path: 'participants',
+        select: '_id username avatarColor isOnline'
+      }
+    })
+    .sort({ createdAt: -1 });
+
+  // Format list with otherParticipant info for consolidated view
+  const formatted = starredDocs
+    .filter((doc) => doc.message) // Filter out any completely vanished messages
+    .map((doc) => {
+      const otherParticipant = doc.conversation?.participants?.find(
+        (p) => p._id.toString() !== currentUserId.toString()
+      );
+
+      return {
+        _id: doc._id,
+        message: doc.message,
+        conversationId: doc.conversation?._id,
+        otherParticipant,
+        starredAt: doc.starredAt || doc.createdAt
+      };
+    });
+
+  res.status(200).json({
+    success: true,
+    message: 'Starred messages retrieved',
+    data: {
+      starredMessages: formatted
+    }
+  });
+});
+
 // FEATURE 4: In-Thread Message Search
 export const searchInConversation = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id;
@@ -390,7 +803,6 @@ export const searchInConversation = asyncHandler(async (req, res) => {
     });
   }
 
-  // Search non-deleted messages matching query string
   const searchQuery = q.trim();
   const searchRegex = new RegExp(searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i');
 
@@ -437,6 +849,8 @@ export const clearConversation = asyncHandler(async (req, res) => {
 
   // Delete all messages belonging to this conversation
   await Message.deleteMany({ conversation: conversation._id });
+  // Also clean up any starred messages in this conversation
+  await StarredMessage.deleteMany({ conversation: conversation._id });
 
   // Reset conversation last message and unread counts
   conversation.lastMessage = null;
@@ -466,8 +880,9 @@ export const deleteConversation = asyncHandler(async (req, res) => {
   });
 
   if (conversation) {
-    // Delete all messages
+    // Delete all messages and stars
     await Message.deleteMany({ conversation: conversation._id });
+    await StarredMessage.deleteMany({ conversation: conversation._id });
     // Delete conversation
     await Conversation.findByIdAndDelete(conversation._id);
   }
@@ -492,6 +907,7 @@ export const clearAllConversations = asyncHandler(async (req, res) => {
   if (conversationIds.length > 0) {
     // Delete all messages for these conversations
     await Message.deleteMany({ conversation: { $in: conversationIds } });
+    await StarredMessage.deleteMany({ conversation: { $in: conversationIds } });
     // Delete the conversations
     await Conversation.deleteMany({ _id: { $in: conversationIds } });
   }

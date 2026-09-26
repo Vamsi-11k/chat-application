@@ -71,7 +71,7 @@ export const AddFriendModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md animate-fadeIn">
       <div
-        className="w-full max-w-lg bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100/90 dark:border-[#0f3d37]/90 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-teal-950/20 dark:shadow-black/80 space-y-5 flex flex-col max-h-[85vh] animate-scaleUp"
+        className="w-full max-w-lg bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100/90 dark:border-[#0f3d37]/90 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-teal-950/20 dark:shadow-black/80 space-y-5 flex flex-col max-h-[85vh] animate-scaleUp running-border-card"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -169,7 +169,7 @@ export const AddFriendModal = ({
                       <button
                         onClick={() => handleAcceptRequest(u.requestId, u._id)}
                         disabled={isActionLoading}
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold transition-all shadow-md shadow-teal-600/25 active:scale-95 disabled:opacity-50"
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold transition-all shadow-md shadow-teal-600/25 active:scale-95 disabled:opacity-50 running-border-btn"
                       >
                         {isActionLoading ? (
                           <Spinner size={14} />
@@ -184,7 +184,7 @@ export const AddFriendModal = ({
                       <button
                         onClick={() => handleSendRequest(u._id)}
                         disabled={isActionLoading}
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold transition-all shadow-md shadow-teal-600/25 active:scale-95 disabled:opacity-50"
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold transition-all shadow-md shadow-teal-600/25 active:scale-95 disabled:opacity-50 running-border-btn"
                       >
                         {isActionLoading ? (
                           <Spinner size={14} />

@@ -7,7 +7,11 @@ import {
   Reply,
   Pencil,
   Trash2,
-  CornerDownRight
+  CornerDownRight,
+  Forward,
+  Pin,
+  PinOff,
+  Star
 } from 'lucide-react';
 
 const COMMON_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -20,6 +24,12 @@ export const MessageBubble = ({
   onEdit,
   onDelete,
   onToggleReaction,
+  onForward,
+  onPin,
+  onUnpin,
+  onStar,
+  onUnstar,
+  isStarred = false,
   onScrollToMessage,
   isHighlighted = false
 }) => {
@@ -34,6 +44,7 @@ export const MessageBubble = ({
   const isRead = !!message.readAt;
   const isDeleted = !!message.deleted;
   const isEdited = !!message.edited && !isDeleted;
+  const isPinned = !!message.pinned && !isDeleted;
 
   // Group reactions: Map of emoji -> { emoji, count, hasReacted, usernames: [] }
   const reactionGroups = (message.reactions || []).reduce((acc, r) => {
@@ -127,7 +138,7 @@ export const MessageBubble = ({
               )}
             </div>
 
-            {/* Reply Action (Available for Both Sent & Received) */}
+            {/* Reply Action */}
             <button
               type="button"
               onClick={() => onReply(message)}
@@ -136,6 +147,59 @@ export const MessageBubble = ({
               className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full hover:bg-teal-50 dark:hover:bg-[#0c2a25] transition-colors"
             >
               <Reply size={14} />
+            </button>
+
+            {/* Forward Action (New) */}
+            <button
+              type="button"
+              onClick={() => onForward && onForward(message)}
+              title="Forward message"
+              aria-label="Forward message"
+              className="p-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 rounded-full hover:bg-teal-50 dark:hover:bg-[#0c2a25] transition-colors"
+            >
+              <Forward size={14} />
+            </button>
+
+            {/* Pin / Unpin Action (New) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isPinned) {
+                  onUnpin && onUnpin(message._id);
+                } else {
+                  onPin && onPin(message._id);
+                }
+              }}
+              title={isPinned ? 'Unpin message' : 'Pin message'}
+              aria-label={isPinned ? 'Unpin message' : 'Pin message'}
+              className={`p-1 rounded-full transition-colors ${
+                isPinned
+                  ? 'text-teal-600 dark:text-teal-400 hover:text-slate-500 bg-teal-50/80 dark:bg-teal-950/40'
+                  : 'text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-[#0c2a25]'
+              }`}
+            >
+              {isPinned ? <PinOff size={13} /> : <Pin size={13} />}
+            </button>
+
+            {/* Star / Unstar Action (Personal) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isStarred) {
+                  onUnstar && onUnstar(message._id);
+                } else {
+                  onStar && onStar(message._id);
+                }
+              }}
+              title={isStarred ? 'Unstar message' : 'Star message'}
+              aria-label={isStarred ? 'Unstar message' : 'Star message'}
+              className={`p-1 rounded-full transition-colors ${
+                isStarred
+                  ? 'text-amber-500 hover:text-slate-400 bg-amber-50/80 dark:bg-amber-950/40'
+                  : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30'
+              }`}
+            >
+              <Star size={13} className={isStarred ? 'fill-amber-500' : ''} />
             </button>
 
             {/* Edit Action (Sender Only) */}
@@ -179,6 +243,23 @@ export const MessageBubble = ({
               : 'bg-white dark:bg-[#0c2a25] text-slate-800 dark:text-slate-100 border border-teal-100/80 dark:border-[#14423a] rounded-bl-xs shadow-xs'
           }`}
         >
+          {/* Forwarded Header (Only shown when genuinely forwarded) */}
+          {!isDeleted && Boolean(message.forwardedFrom?.originalSender || message.forwardedFrom?.originalSenderName || message.forwardedFrom?.originalConversationId) && (
+            <div
+              className={`flex items-center space-x-1 text-[11px] mb-1 font-medium select-none ${
+                isOwn ? 'text-teal-200' : 'text-teal-600 dark:text-teal-400'
+              }`}
+            >
+              <Forward size={12} className="shrink-0 stroke-[2.2]" />
+              <span className="italic">
+                Forwarded
+                {message.forwardedFrom.originalSenderName
+                  ? ` from ${message.forwardedFrom.originalSenderName}`
+                  : ''}
+              </span>
+            </div>
+          )}
+
           {/* Quote-Reply Header Banner */}
           {message.replyTo && !isDeleted && (
             <div
@@ -248,64 +329,68 @@ export const MessageBubble = ({
             </p>
           )}
 
-          {/* Timestamp, Edited Flag & Read Status */}
+          {/* Timestamp, Pin, Star, Edited Flag & Read Status */}
           <div
             className={`flex items-center justify-end space-x-1.5 mt-1 text-[10px] select-none ${
               isOwn ? 'text-teal-100' : 'text-slate-400 dark:text-slate-400'
             }`}
           >
+            {isPinned && (
+              <span title="Pinned message" className="inline-flex items-center text-amber-300">
+                <Pin size={10} className="fill-current" />
+              </span>
+            )}
+            {isStarred && (
+              <span title="Starred message" className="inline-flex items-center text-amber-400">
+                <Star size={10} className="fill-current" />
+              </span>
+            )}
             {isEdited && <span className="opacity-80 font-normal italic">(edited)</span>}
             <span>{formattedTime}</span>
             {isOwn && !isDeleted && (
               <span title={isRead ? `Read at ${format(new Date(message.readAt), 'p')}` : 'Delivered'}>
                 {isRead ? (
-                  <CheckCheck size={13} className="text-teal-200 inline stroke-[2.5]" />
+                  <CheckCheck size={14} className="text-teal-200 inline" />
                 ) : (
-                  <Check size={13} className="text-teal-200 inline" />
+                  <Check size={14} className="text-teal-200/80 inline" />
                 )}
               </span>
             )}
           </div>
-
-          {/* Overlapping WhatsApp-Style Reaction Pill Badge (Bottom-Right on Bubble) */}
-          {hasReactions && (
-            <div
-              className={`absolute -bottom-2.5 ${
-                isOwn ? 'right-2' : 'left-2'
-              } flex items-center space-x-1 bg-white dark:bg-[#061e1a] border border-teal-100 dark:border-[#0f3d37] px-1.5 py-0.5 rounded-full shadow-md z-10`}
-            >
-              {reactionList.map((r) => {
-                const tooltipText =
-                  r.usernames.length > 0
-                    ? `${r.usernames.join(', ')} reacted with ${r.emoji}`
-                    : `Reacted with ${r.emoji}`;
-
-                return (
-                  <button
-                    key={r.emoji}
-                    type="button"
-                    onClick={() => onToggleReaction(message._id, r.emoji)}
-                    title={tooltipText}
-                    aria-label={tooltipText}
-                    className={`inline-flex items-center space-x-0.5 px-1 py-0.2 rounded-full text-xs font-medium transition-all active:scale-90 ${
-                      r.hasReacted
-                        ? 'text-teal-700 dark:text-teal-300 font-bold'
-                        : 'text-slate-700 dark:text-slate-300 opacity-90'
-                    }`}
-                  >
-                    <span className="text-[13px]">{r.emoji}</span>
-                    {r.count > 1 && (
-                      <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 pl-0.5">
-                        {r.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
         </div>
+
+        {/* Reaction Badges Row */}
+        {hasReactions && (
+          <div
+            className={`flex flex-wrap items-center gap-1 mt-1 z-10 select-none ${
+              isOwn ? 'justify-end' : 'justify-start'
+            }`}
+          >
+            {reactionList.map((group) => {
+              const tooltipText = group.usernames.length > 0 ? group.usernames.join(', ') : '';
+              return (
+                <button
+                  key={group.emoji}
+                  type="button"
+                  title={tooltipText}
+                  onClick={() => onToggleReaction(message._id, group.emoji)}
+                  className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium border shadow-xs transition-transform active:scale-95 ${
+                    group.hasReacted
+                      ? 'bg-teal-100 dark:bg-[#0e3a33] text-teal-800 dark:text-teal-200 border-teal-300 dark:border-teal-700/80 scale-105'
+                      : 'bg-white/90 dark:bg-[#07201c]/90 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#0e352f]'
+                  }`}
+                >
+                  <span className="text-sm">{group.emoji}</span>
+                  {group.count > 1 && (
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                      {group.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </div>

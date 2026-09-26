@@ -73,7 +73,7 @@ export const Signup = () => {
       {/* ======================================================================= */}
       {/* AUTH CARD (Centered Vertical Panel with Top-Left Accent Wave)           */}
       {/* ======================================================================= */}
-      <div className="w-full max-w-[420px] bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100/90 dark:border-[#0f3d37]/90 rounded-[32px] p-8 sm:p-10 shadow-2xl shadow-teal-950/15 dark:shadow-black/70 relative overflow-hidden transition-all duration-300">
+      <div className="w-full max-w-[420px] bg-white/95 dark:bg-[#061e1a]/95 border border-teal-100/90 dark:border-[#0f3d37]/90 rounded-[32px] p-8 sm:p-10 shadow-2xl shadow-teal-950/15 dark:shadow-black/70 relative overflow-hidden transition-all duration-300 running-border-card">
         
         {/* Top-Left Organic Curved Accent Ribbon */}
         <div className="absolute -top-4 -left-4 w-56 h-56 pointer-events-none overflow-hidden z-0">
@@ -109,13 +109,10 @@ export const Signup = () => {
         {/* 1. HEADER ROW */}
         <div className="flex items-center justify-between relative z-10 mb-7">
           {/* App Logo */}
-          <Link to="/" className="flex items-center space-x-2.5 group">
+          <Link to="/" aria-label="Home" className="flex items-center group">
             <div className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-md shadow-teal-600/30 group-hover:scale-105 transition-transform">
               <MessageSquare size={20} className="stroke-[2.2]" />
             </div>
-            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
-              PulseChat
-            </span>
           </Link>
 
           {/* Return to Home link */}
@@ -272,7 +269,7 @@ export const Signup = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-6 py-3.5 px-4 bg-teal-600 hover:bg-teal-500 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-full text-xs uppercase tracking-widest transition-all duration-150 shadow-xl shadow-teal-600/30 flex items-center justify-center space-x-2"
+            className="w-full mt-6 py-3.5 px-4 bg-teal-600 hover:bg-teal-500 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-full text-xs uppercase tracking-widest transition-all duration-150 shadow-xl shadow-teal-600/30 flex items-center justify-center space-x-2 running-border-btn"
           >
             {isSubmitting ? (
               <>

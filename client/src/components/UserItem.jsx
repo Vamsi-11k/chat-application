@@ -36,8 +36,8 @@ export const UserItem = ({
       onClick={onClick}
       className={`group flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
         isSelected
-          ? 'bg-teal-500/10 dark:bg-teal-600/15 border-l-4 border-teal-500 shadow-xs'
-          : 'hover:bg-teal-50/60 dark:hover:bg-[#092a25]/60 border-l-4 border-transparent'
+          ? 'bg-teal-500/15 dark:bg-teal-600/20 shadow-md running-border'
+          : 'hover:bg-teal-50/60 dark:hover:bg-[#092a25]/60'
       }`}
     >
       <div className="flex items-center space-x-3.5 min-w-0 flex-1">

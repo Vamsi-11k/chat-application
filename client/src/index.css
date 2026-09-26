@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --accent: #0284c7;
+  --grad-1: #0d9488;
+  --grad-2: #0284c7;
+  --grad-3: #14b8a6;
+  --grad-glow: rgba(13, 148, 136, 0.35);
+}
+
+.dark {
+  --primary: #0d9488;
+  --primary-hover: #14b8a6;
+  --accent: #10b981;
+  --grad-1: #0d9488;
+  --grad-2: #10b981;
+  --grad-3: #2dd4bf;
+  --grad-glow: rgba(45, 212, 191, 0.45);
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -39,6 +59,37 @@
   }
 }
 
+@keyframes animeFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes retroGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.5));
+  }
+}
+
+/* Linear Running Gradient Border Keyframe */
+@keyframes runningGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -51,7 +102,130 @@
   animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom sleek scrollbar for light & dark modes */
+/* ==========================================================================
+   LINEAR GRADIENT RUNNING BORDER SYSTEM
+   Matches active theme button colors dynamically
+   ========================================================================== */
+
+/* Universal container running border */
+.running-border {
+  position: relative;
+}
+
+.running-border::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    90deg,
+    var(--grad-1),
+    var(--grad-2),
+    var(--grad-3),
+    var(--grad-2),
+    var(--grad-1)
+  );
+  background-size: 300% 100%;
+  animation: runningGradientFlow 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Card / Section running border with subtle glow */
+.running-border-card {
+  position: relative;
+}
+
+.running-border-card::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    90deg,
+    var(--grad-1),
+    var(--grad-2),
+    var(--grad-3),
+    var(--grad-2),
+    var(--grad-1)
+  );
+  background-size: 300% 100%;
+  animation: runningGradientFlow 5s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.running-border-card::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--grad-1),
+    var(--grad-2),
+    var(--grad-3),
+    var(--grad-1)
+  );
+  background-size: 300% 100%;
+  animation: runningGradientFlow 5s linear infinite;
+  filter: blur(10px);
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+/* Button running gradient border */
+.running-border-btn {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent !important;
+}
+
+.running-border-btn::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    90deg,
+    var(--grad-1),
+    var(--grad-2),
+    var(--grad-3),
+    var(--grad-2),
+    var(--grad-1)
+  );
+  background-size: 300% 100%;
+  animation: runningGradientFlow 3.5s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease, padding 0.2s ease;
+}
+
+.running-border-btn:hover::before {
+  animation-duration: 1.8s;
+  padding: 2px;
+}
+
+/* Ambient running border glow pulse */
+.running-border-glow {
+  box-shadow: 0 0 16px -2px var(--grad-glow);
+}
+
+/* Custom sleek scrollbar for themes */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -76,4 +250,319 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
+}
+
+/* ==========================================================================
+   ANIME THEME (Sakura Blossom & Dreamy Lavender)
+   ========================================================================== */
+[data-theme="anime"] {
+  --primary: #ec4899;
+  --primary-hover: #db2777;
+  --accent: #a855f7;
+  --glow: rgba(236, 72, 153, 0.35);
+  --grad-1: #ec4899;
+  --grad-2: #c084fc;
+  --grad-3: #f43f5e;
+  --grad-glow: rgba(236, 72, 153, 0.5);
+}
+
+/* Anime Backgrounds & Gradients */
+[data-theme="anime"] .dark\:from-\[\#031714\],
+[data-theme="anime"] .bg-\[\#031714\] {
+  background-color: #12071f !important;
+  --tw-gradient-from: #12071f !important;
+  --tw-gradient-to: rgb(18 7 31 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+[data-theme="anime"] .dark\:via-\[\#072420\] {
+  --tw-gradient-to: rgb(32 12 51 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #200c33 50%, var(--tw-gradient-to) !important;
+}
+
+[data-theme="anime"] .dark\:to-\[\#0f3d37\],
+[data-theme="anime"] .bg-\[\#0f3d37\] {
+  --tw-gradient-to: #33124f !important;
+}
+
+[data-theme="anime"] .bg-\[\#061e1a\],
+[data-theme="anime"] .dark\:bg-\[\#061e1a\],
+[data-theme="anime"] .dark\:bg-\[\#061e1a\]\/95,
+[data-theme="anime"] .dark\:bg-\[\#061e1a\]\/90,
+[data-theme="anime"] .dark\:bg-\[\#061e1a\]\/80 {
+  background-color: rgba(33, 14, 52, 0.95) !important;
+}
+
+[data-theme="anime"] .bg-\[\#031512\],
+[data-theme="anime"] .dark\:bg-\[\#031512\] {
+  background-color: #160826 !important;
+}
+
+[data-theme="anime"] .bg-\[\#051c18\],
+[data-theme="anime"] .dark\:bg-\[\#051c18\],
+[data-theme="anime"] .dark\:bg-\[\#051c18\]\/95 {
+  background-color: rgba(26, 11, 41, 0.95) !important;
+}
+
+[data-theme="anime"] .bg-\[\#092b26\],
+[data-theme="anime"] .dark\:bg-\[\#092b26\],
+[data-theme="anime"] .dark\:bg-\[\#092a25\],
+[data-theme="anime"] .dark\:bg-\[\#092a25\]\/80,
+[data-theme="anime"] .dark\:bg-\[\#092a25\]\/60 {
+  background-color: #2b1245 !important;
+}
+
+[data-theme="anime"] .bg-\[\#0a231f\],
+[data-theme="anime"] .dark\:bg-\[\#0a231f\],
+[data-theme="anime"] .dark\:bg-\[\#082420\],
+[data-theme="anime"] .dark\:bg-\[\#0a2c27\],
+[data-theme="anime"] .dark\:bg-\[\#0d2a25\],
+[data-theme="anime"] .dark\:bg-\[\#0f2e29\],
+[data-theme="anime"] .dark\:bg-\[\#0b2823\]\/90,
+[data-theme="anime"] .dark\:bg-\[\#0b2823\]\/80,
+[data-theme="anime"] .dark\:bg-\[\#09211d\]\/95,
+[data-theme="anime"] .dark\:bg-\[\#0d2e28\],
+[data-theme="anime"] .dark\:bg-\[\#0f3d37\] {
+  background-color: #361554 !important;
+}
+
+[data-theme="anime"] .bg-\[\#051815\],
+[data-theme="anime"] .dark\:bg-\[\#051815\],
+[data-theme="anime"] .dark\:bg-\[\#031310\]\/50 {
+  background-color: rgba(22, 9, 36, 0.85) !important;
+}
+
+/* Anime Radial Glows */
+[data-theme="anime"] .via-\[\#092c27\]\/40,
+[data-theme="anime"] .via-\[\#092c27\]\/30 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(76, 29, 120, 0.35) 50%, var(--tw-gradient-to) !important;
+}
+
+[data-theme="anime"] .from-teal-500\/15,
+[data-theme="anime"] .from-teal-500\/10 {
+  --tw-gradient-from: rgba(236, 72, 153, 0.25) !important;
+}
+
+/* Anime Primary Colors & Buttons */
+[data-theme="anime"] .bg-teal-600,
+[data-theme="anime"] .bg-teal-500 {
+  background-color: #ec4899 !important;
+}
+
+[data-theme="anime"] .hover\:bg-teal-500:hover,
+[data-theme="anime"] .hover\:bg-teal-600:hover {
+  background-color: #db2777 !important;
+}
+
+[data-theme="anime"] .text-teal-600,
+[data-theme="anime"] .text-teal-500,
+[data-theme="anime"] .dark\:text-teal-400,
+[data-theme="anime"] .dark\:text-teal-300,
+[data-theme="anime"] .dark\:text-teal-100 {
+  color: #f472b6 !important;
+}
+
+[data-theme="anime"] .hover\:text-teal-600:hover,
+[data-theme="anime"] .dark\:hover\:text-teal-300:hover,
+[data-theme="anime"] .dark\:hover\:text-teal-400:hover {
+  color: #fb7185 !important;
+}
+
+[data-theme="anime"] .border-teal-500,
+[data-theme="anime"] .border-teal-600,
+[data-theme="anime"] .focus\:border-teal-500:focus,
+[data-theme="anime"] .dark\:focus\:border-teal-400:focus {
+  border-color: #ec4899 !important;
+}
+
+[data-theme="anime"] .dark\:border-\[\#092b26\],
+[data-theme="anime"] .dark\:border-\[\#0f3d37\],
+[data-theme="anime"] .dark\:border-\[\#0e3831\],
+[data-theme="anime"] .dark\:border-\[\#103a33\],
+[data-theme="anime"] .dark\:border-\[\#14423a\],
+[data-theme="anime"] .dark\:border-\[\#0d332c\]\/80,
+[data-theme="anime"] .dark\:border-\[\#0c3530\],
+[data-theme="anime"] .dark\:border-\[\#0c3530\]\/80,
+[data-theme="anime"] .dark\:border-\[\#0c3530\]\/60,
+[data-theme="anime"] .dark\:border-\[\#14423b\],
+[data-theme="anime"] .dark\:border-\[\#123e37\],
+[data-theme="anime"] .dark\:border-\[\#0e3a33\]\/80,
+[data-theme="anime"] .dark\:border-\[\#133e37\] {
+  border-color: #4c1d78 !important;
+}
+
+[data-theme="anime"] .shadow-teal-600\/30,
+[data-theme="anime"] .shadow-teal-600\/35,
+[data-theme="anime"] .shadow-teal-600\/25,
+[data-theme="anime"] .shadow-teal-600\/20 {
+  --tw-shadow-color: rgba(236, 72, 153, 0.4) !important;
+  box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.35) !important;
+}
+
+[data-theme="anime"] .dark\:from-teal-400 {
+  --tw-gradient-from: #f472b6 !important;
+}
+[data-theme="anime"] .dark\:via-emerald-300 {
+  --tw-gradient-stops: var(--tw-gradient-from), #c084fc, var(--tw-gradient-to) !important;
+}
+[data-theme="anime"] .dark\:to-teal-300 {
+  --tw-gradient-to: #ec4899 !important;
+}
+
+
+/* ==========================================================================
+   NOSTALGIC THEME (Retro Synthwave & 90s Cyber Arcade)
+   ========================================================================== */
+[data-theme="nostalgic"] {
+  --primary: #06b6d4;
+  --accent: #f59e0b;
+  --secondary: #ec4899;
+  --glow: rgba(6, 182, 212, 0.4);
+  --grad-1: #06b6d4;
+  --grad-2: #f59e0b;
+  --grad-3: #ec4899;
+  --grad-glow: rgba(6, 182, 212, 0.5);
+}
+
+/* Nostalgic Backgrounds & Gradients */
+[data-theme="nostalgic"] .dark\:from-\[\#031714\],
+[data-theme="nostalgic"] .bg-\[\#031714\] {
+  background-color: #0c091f !important;
+  --tw-gradient-from: #0c091f !important;
+  --tw-gradient-to: rgb(12 9 31 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+[data-theme="nostalgic"] .dark\:via-\[\#072420\] {
+  --tw-gradient-to: rgb(24 16 54 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #181036 50%, var(--tw-gradient-to) !important;
+}
+
+[data-theme="nostalgic"] .dark\:to-\[\#0f3d37\],
+[data-theme="nostalgic"] .bg-\[\#0f3d37\] {
+  --tw-gradient-to: #281754 !important;
+}
+
+[data-theme="nostalgic"] .bg-\[\#061e1a\],
+[data-theme="nostalgic"] .dark\:bg-\[\#061e1a\],
+[data-theme="nostalgic"] .dark\:bg-\[\#061e1a\]\/95,
+[data-theme="nostalgic"] .dark\:bg-\[\#061e1a\]\/90,
+[data-theme="nostalgic"] .dark\:bg-\[\#061e1a\]\/80 {
+  background-color: rgba(22, 16, 48, 0.95) !important;
+}
+
+[data-theme="nostalgic"] .bg-\[\#031512\],
+[data-theme="nostalgic"] .dark\:bg-\[\#031512\] {
+  background-color: #0e0a24 !important;
+}
+
+[data-theme="nostalgic"] .bg-\[\#051c18\],
+[data-theme="nostalgic"] .dark\:bg-\[\#051c18\],
+[data-theme="nostalgic"] .dark\:bg-\[\#051c18\]\/95 {
+  background-color: rgba(18, 13, 38, 0.95) !important;
+}
+
+[data-theme="nostalgic"] .bg-\[\#092b26\],
+[data-theme="nostalgic"] .dark\:bg-\[\#092b26\],
+[data-theme="nostalgic"] .dark\:bg-\[\#092a25\],
+[data-theme="nostalgic"] .dark\:bg-\[\#092a25\]\/80,
+[data-theme="nostalgic"] .dark\:bg-\[\#092a25\]\/60 {
+  background-color: #23174a !important;
+}
+
+[data-theme="nostalgic"] .bg-\[\#0a231f\],
+[data-theme="nostalgic"] .dark\:bg-\[\#0a231f\],
+[data-theme="nostalgic"] .dark\:bg-\[\#082420\],
+[data-theme="nostalgic"] .dark\:bg-\[\#0a2c27\],
+[data-theme="nostalgic"] .dark\:bg-\[\#0d2a25\],
+[data-theme="nostalgic"] .dark\:bg-\[\#0f2e29\],
+[data-theme="nostalgic"] .dark\:bg-\[\#0b2823\]\/90,
+[data-theme="nostalgic"] .dark\:bg-\[\#0b2823\]\/80,
+[data-theme="nostalgic"] .dark\:bg-\[\#09211d\]\/95,
+[data-theme="nostalgic"] .dark\:bg-\[\#0d2e28\],
+[data-theme="nostalgic"] .dark\:bg-\[\#0f3d37\] {
+  background-color: #2d1c5c !important;
+}
+
+[data-theme="nostalgic"] .bg-\[\#051815\],
+[data-theme="nostalgic"] .dark\:bg-\[\#051815\],
+[data-theme="nostalgic"] .dark\:bg-\[\#031310\]\/50 {
+  background-color: rgba(16, 11, 33, 0.85) !important;
+}
+
+/* Nostalgic Glows */
+[data-theme="nostalgic"] .via-\[\#092c27\]\/40,
+[data-theme="nostalgic"] .via-\[\#092c27\]\/30 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(59, 31, 115, 0.35) 50%, var(--tw-gradient-to) !important;
+}
+
+[data-theme="nostalgic"] .from-teal-500\/15,
+[data-theme="nostalgic"] .from-teal-500\/10 {
+  --tw-gradient-from: rgba(6, 182, 212, 0.25) !important;
+}
+
+/* Nostalgic Primary Cyber Cyan & Sunset Amber */
+[data-theme="nostalgic"] .bg-teal-600,
+[data-theme="nostalgic"] .bg-teal-500 {
+  background-color: #06b6d4 !important;
+}
+
+[data-theme="nostalgic"] .hover\:bg-teal-500:hover,
+[data-theme="nostalgic"] .hover\:bg-teal-600:hover {
+  background-color: #0891b2 !important;
+}
+
+[data-theme="nostalgic"] .text-teal-600,
+[data-theme="nostalgic"] .text-teal-500,
+[data-theme="nostalgic"] .dark\:text-teal-400,
+[data-theme="nostalgic"] .dark\:text-teal-300,
+[data-theme="nostalgic"] .dark\:text-teal-100 {
+  color: #22d3ee !important;
+}
+
+[data-theme="nostalgic"] .hover\:text-teal-600:hover,
+[data-theme="nostalgic"] .dark\:hover\:text-teal-300:hover,
+[data-theme="nostalgic"] .dark\:hover\:text-teal-400:hover {
+  color: #f59e0b !important;
+}
+
+[data-theme="nostalgic"] .border-teal-500,
+[data-theme="nostalgic"] .border-teal-600,
+[data-theme="nostalgic"] .focus\:border-teal-500:focus,
+[data-theme="nostalgic"] .dark\:focus\:border-teal-400:focus {
+  border-color: #06b6d4 !important;
+}
+
+[data-theme="nostalgic"] .dark\:border-\[\#092b26\],
+[data-theme="nostalgic"] .dark\:border-\[\#0f3d37\],
+[data-theme="nostalgic"] .dark\:border-\[\#0e3831\],
+[data-theme="nostalgic"] .dark\:border-\[\#103a33\],
+[data-theme="nostalgic"] .dark\:border-\[\#14423a\],
+[data-theme="nostalgic"] .dark\:border-\[\#0d332c\]\/80,
+[data-theme="nostalgic"] .dark\:border-\[\#0c3530\],
+[data-theme="nostalgic"] .dark\:border-\[\#0c3530\]\/80,
+[data-theme="nostalgic"] .dark\:border-\[\#0c3530\]\/60,
+[data-theme="nostalgic"] .dark\:border-\[\#14423b\],
+[data-theme="nostalgic"] .dark\:border-\[\#123e37\],
+[data-theme="nostalgic"] .dark\:border-\[\#0e3a33\]\/80,
+[data-theme="nostalgic"] .dark\:border-\[\#133e37\] {
+  border-color: #3b2875 !important;
+}
+
+[data-theme="nostalgic"] .shadow-teal-600\/30,
+[data-theme="nostalgic"] .shadow-teal-600\/35,
+[data-theme="nostalgic"] .shadow-teal-600\/25,
+[data-theme="nostalgic"] .shadow-teal-600\/20 {
+  --tw-shadow-color: rgba(6, 182, 212, 0.4) !important;
+  box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.35) !important;
+}
+
+[data-theme="nostalgic"] .dark\:from-teal-400 {
+  --tw-gradient-from: #f59e0b !important;
+}
+[data-theme="nostalgic"] .dark\:via-emerald-300 {
+  --tw-gradient-stops: var(--tw-gradient-from), #ec4899, var(--tw-gradient-to) !important;
+}
+[data-theme="nostalgic"] .dark\:to-teal-300 {
+  --tw-gradient-to: #06b6d4 !important;
 }

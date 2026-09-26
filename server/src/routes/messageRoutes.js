@@ -6,6 +6,13 @@ import {
   editMessage,
   deleteMessage,
   toggleReaction,
+  forwardMessage,
+  pinMessage,
+  unpinMessage,
+  getPinnedMessages,
+  starMessage,
+  unstarMessage,
+  getStarredMessages,
   searchInConversation,
   clearConversation,
   deleteConversation,
@@ -22,8 +29,25 @@ const router = express.Router();
 router.get('/conversations', protect, getConversations);
 router.delete('/clear-all', protect, clearAllConversations);
 
+// Starred Messages (Personal consolidated list)
+router.get('/starred', protect, getStarredMessages);
+
 // Feature 4: Search messages in thread
 router.get('/:userId/search', protect, userIdParamValidator, searchInConversation);
+
+// Feature: Pinned messages in a conversation
+router.get('/:userId/pins', protect, userIdParamValidator, getPinnedMessages);
+
+// Feature: Message Forwarding
+router.post('/:id/forward', protect, forwardMessage);
+
+// Feature: Pin & Unpin Messages
+router.post('/:id/pin', protect, pinMessage);
+router.post('/:id/unpin', protect, unpinMessage);
+
+// Feature: Star & Unstar Messages (Private)
+router.post('/:id/star', protect, starMessage);
+router.delete('/:id/star', protect, unstarMessage);
 
 // Feature 1: Edit & Soft Delete Messages
 router.patch('/:id/edit', protect, editMessage);

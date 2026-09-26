@@ -9,7 +9,12 @@ import {
   ShieldCheck,
   Search,
   X,
-  CornerDownRight
+  CornerDownRight,
+  Pin,
+  PinOff,
+  Forward,
+  Star,
+  ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../api/axios';
@@ -25,6 +30,8 @@ import { Spinner } from './Loader';
 export const ChatWindow = ({
   selectedUser,
   messages,
+  pinnedMessages = [],
+  starredMessageIds = new Set(),
   onSendMessage,
   onTyping,
   onStopTyping,
@@ -39,13 +46,19 @@ export const ChatWindow = ({
   onRemoveFriend,
   onEditMessage,
   onDeleteMessage,
-  onToggleReaction
+  onToggleReaction,
+  onForwardMessage,
+  onPinMessage,
+  onUnpinMessage,
+  onStarMessage,
+  onUnstarMessage
 }) => {
   const { user: currentUser } = useAuth();
   const { isUserOnline } = useSocket();
   const [showMenu, setShowMenu] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+  const [isPinnedDrawerOpen, setIsPinnedDrawerOpen] = useState(false);
 
   // In-Thread Search States (Feature 4)
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -128,16 +141,18 @@ export const ChatWindow = ({
   // Empty state when no contact is selected
   if (!selectedUser) {
     return (
-      <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-slate-100/60 dark:bg-[#031714] p-8 text-center select-none transition-colors duration-200">
-        <div className="w-20 h-20 rounded-3xl bg-white dark:bg-[#061e1a] border border-teal-100 dark:border-[#0f3d37] flex items-center justify-center text-teal-600 dark:text-teal-400 mb-4 shadow-xl shadow-teal-950/5">
-          <MessagesSquare size={36} className="stroke-[2.2]" />
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 text-center select-none transition-colors duration-200">
+        <div className="p-8 rounded-3xl bg-white/90 dark:bg-[#061e1a]/90 border border-teal-100/90 dark:border-[#0f3d37]/90 shadow-2xl shadow-teal-950/10 flex flex-col items-center max-w-sm running-border-card animate-fadeIn">
+          <div className="w-20 h-20 rounded-3xl bg-teal-50 dark:bg-[#082420] border border-teal-200/80 dark:border-teal-700/60 flex items-center justify-center text-teal-600 dark:text-teal-400 mb-4 shadow-lg shadow-teal-600/15">
+            <MessagesSquare size={36} className="stroke-[2.2] animate-pulse" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            Select a Conversation
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+            Choose a contact from the list on the left to start real-time 1-on-1 messaging.
+          </p>
         </div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          Select a Conversation
-        </h3>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1.5 leading-relaxed">
-          Choose a contact from the list on the left to start real-time 1-on-1 messaging.
-        </p>
       </div>
     );
   }
@@ -145,10 +160,11 @@ export const ChatWindow = ({
   const isOnline = isUserOnline(selectedUser._id) || selectedUser.isOnline;
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#031714] min-w-0 transition-colors duration-200 relative">
+    <main className="flex-1 flex flex-col h-full bg-transparent min-w-0 transition-colors duration-200 relative">
       
-      {/* Active Chat Header */}
-      <header className="px-4 sm:px-6 py-3.5 bg-white/95 dark:bg-[#051c18]/95 border-b border-teal-100/80 dark:border-[#0c3530]/80 flex items-center justify-between flex-shrink-0 z-10 backdrop-blur-md">
+      {/* Active Chat Header with Running Border Bottom Accent */}
+      <header className="px-4 sm:px-6 py-3.5 bg-white/80 dark:bg-[#051c18]/80 border-b border-teal-100/60 dark:border-[#0c3530]/60 flex items-center justify-between flex-shrink-0 z-10 backdrop-blur-xl relative">
+        <div className="absolute bottom-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-teal-500/50 to-transparent pointer-events-none" />
         <div className="flex items-center space-x-3.5 min-w-0">
           {/* Mobile Back Button */}
           <button
@@ -190,8 +206,26 @@ export const ChatWindow = ({
           </div>
         </div>
 
-        {/* Header Action Buttons (Search & Options) */}
-        <div className="flex items-center space-x-1">
+        {/* Header Action Buttons (Pinned Messages, Search & Options) */}
+        <div className="flex items-center space-x-1.5">
+          {/* Pinned Messages Pill / Trigger */}
+          {pinnedMessages && pinnedMessages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsPinnedDrawerOpen(!isPinnedDrawerOpen)}
+              title={isPinnedDrawerOpen ? 'Hide pinned messages' : 'Show pinned messages'}
+              aria-label="Pinned Messages"
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                isPinnedDrawerOpen
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/70'
+              }`}
+            >
+              <Pin size={13} className="fill-current" />
+              <span>{pinnedMessages.length} Pinned</span>
+            </button>
+          )}
+
           {/* In-Thread Search Trigger (Feature 4) */}
           <button
             onClick={() => {
@@ -265,6 +299,64 @@ export const ChatWindow = ({
           </div>
         </div>
       </header>
+
+      {/* Pinned Messages Banner Drawer */}
+      {isPinnedDrawerOpen && pinnedMessages.length > 0 && (
+        <div className="bg-amber-50/95 dark:bg-[#0d2a23]/95 border-b border-amber-200/80 dark:border-[#13493e] p-3 shadow-sm animate-fadeIn">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-900 dark:text-amber-300">
+              <Pin size={14} className="fill-current" />
+              <span>Pinned Messages ({pinnedMessages.length}/5)</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPinnedDrawerOpen(false)}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            {pinnedMessages.map((pMsg) => {
+              const pSender = typeof pMsg.sender === 'object' ? pMsg.sender.username : 'User';
+              return (
+                <div
+                  key={pMsg._id}
+                  onClick={() => handleScrollToMessage(pMsg._id)}
+                  className="flex items-center justify-between p-2 rounded-xl bg-white/90 dark:bg-[#081e19]/90 border border-amber-200/60 dark:border-[#103a33] hover:border-amber-400 dark:hover:border-amber-500 cursor-pointer transition-all text-xs"
+                >
+                  <div className="min-w-0 flex-1 pr-2">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
+                      {pSender}:
+                    </span>
+                    <p className="text-slate-600 dark:text-slate-300 truncate text-xs mt-0.5">
+                      {pMsg.text}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-1.5 shrink-0">
+                    <span className="text-[10px] text-slate-400">
+                      {pMsg.pinnedAt ? format(new Date(pMsg.pinnedAt), 'MMM d') : ''}
+                    </span>
+                    <button
+                      type="button"
+                      title="Unpin message"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUnpinMessage(pMsg._id);
+                      }}
+                      className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    >
+                      <PinOff size={13} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* In-Thread Search Panel Bar (Feature 4) */}
       {isSearchOpen && (
@@ -385,6 +477,12 @@ export const ChatWindow = ({
                 onEdit={onEditMessage}
                 onDelete={triggerDeleteMessageConfirm}
                 onToggleReaction={onToggleReaction}
+                onForward={onForwardMessage}
+                onPin={onPinMessage}
+                onUnpin={onUnpinMessage}
+                onStar={onStarMessage}
+                onUnstar={onUnstarMessage}
+                isStarred={starredMessageIds?.has(msg._id)}
                 onScrollToMessage={handleScrollToMessage}
                 isHighlighted={highlightedMessageId === msg._id}
               />

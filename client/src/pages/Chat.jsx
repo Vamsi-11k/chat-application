@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { Sidebar } from '../components/Sidebar';
 import { ChatWindow } from '../components/ChatWindow';
 import { AddFriendModal } from '../components/AddFriendModal';
 import { ConfirmationModal } from '../components/ConfirmationModal';
+import { ForwardModal } from '../components/ForwardModal';
 
 export const Chat = () => {
   const { user: currentUser } = useAuth();
@@ -16,6 +17,9 @@ export const Chat = () => {
   const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [starredMessages, setStarredMessages] = useState([]);
+  const [loadingStarred, setLoadingStarred] = useState(false);
   const [loadingFriends, setLoadingFriends] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -32,6 +36,10 @@ export const Chat = () => {
 
   // Modals state
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
+  const [forwardModalState, setForwardModalState] = useState({
+    isOpen: false,
+    message: null
+  });
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -41,6 +49,15 @@ export const Chat = () => {
     action: null
   });
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Set of starred message IDs for O(1) lookups
+  const starredMessageIds = useMemo(() => {
+    const set = new Set();
+    starredMessages.forEach((s) => {
+      if (s.message?._id) set.add(s.message._id);
+    });
+    return set;
+  }, [starredMessages]);
 
   // 1. Fetch Friends (Accepted Contacts)
   const fetchFriends = useCallback(async () => {
@@ -79,13 +96,41 @@ export const Chat = () => {
     }
   }, []);
 
+  // 4. Fetch Personal Starred Messages
+  const fetchStarredMessages = useCallback(async () => {
+    try {
+      setLoadingStarred(true);
+      const res = await api.get('/messages/starred');
+      setStarredMessages(res.data?.data?.starredMessages || []);
+    } catch (err) {
+      console.error('Failed to fetch starred messages:', err);
+    } finally {
+      setLoadingStarred(false);
+    }
+  }, []);
+
+  // 5. Fetch Pinned Messages in Active Conversation
+  const fetchPinnedMessages = useCallback(async (userId) => {
+    if (!userId) {
+      setPinnedMessages([]);
+      return;
+    }
+    try {
+      const res = await api.get(`/messages/${userId}/pins`);
+      setPinnedMessages(res.data?.data?.pinnedMessages || []);
+    } catch (err) {
+      console.error('Failed to fetch pinned messages:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchFriends();
     fetchRequests();
     fetchConversations();
-  }, [fetchFriends, fetchRequests, fetchConversations]);
+    fetchStarredMessages();
+  }, [fetchFriends, fetchRequests, fetchConversations, fetchStarredMessages]);
 
-  // 4. Fetch Messages for Selected User
+  // 6. Fetch Messages for Selected User
   const fetchMessages = useCallback(async (userId, pageNumber = 1, append = false) => {
     try {
       if (pageNumber === 1) setLoadingMessages(true);
@@ -111,7 +156,7 @@ export const Chat = () => {
     }
   }, []);
 
-  // 5. Mark Messages as Read
+  // 7. Mark Messages as Read
   const markAsRead = useCallback(async (userId) => {
     try {
       await api.patch(`/messages/${userId}/read`);
@@ -133,6 +178,7 @@ export const Chat = () => {
     setSelectedUser(user);
     setIsTyping(false);
     fetchMessages(user._id, 1, false);
+    fetchPinnedMessages(user._id);
     markAsRead(user._id);
   };
 
@@ -146,7 +192,7 @@ export const Chat = () => {
     }
   };
 
-  // 6. Send Message Action (Supports replyTo)
+  // 8. Send Message Action (Supports replyTo)
   const handleSendMessage = (text, replyToId = null) => {
     if (!socket || !selectedUser) return;
 
@@ -161,7 +207,7 @@ export const Chat = () => {
     });
   };
 
-  // 7. Edit Message Action (Feature 1)
+  // 9. Edit Message Action
   const handleEditMessage = (messageId, newText) => {
     if (!socket || !messageId || !newText.trim()) return;
 
@@ -177,7 +223,7 @@ export const Chat = () => {
     });
   };
 
-  // 8. Delete Message Action (Feature 1 Soft-Delete)
+  // 10. Delete Message Action (Soft-Delete)
   const handleDeleteMessage = (messageId) => {
     if (!socket || !messageId) return;
 
@@ -192,7 +238,7 @@ export const Chat = () => {
     });
   };
 
-  // 9. Toggle Reaction Action (Feature 2)
+  // 11. Toggle Reaction Action
   const handleToggleReaction = (messageId, emoji) => {
     if (!socket || !messageId || !emoji) return;
 
@@ -206,7 +252,87 @@ export const Chat = () => {
     });
   };
 
-  // 10. Typing Indicators
+  // 12. Message Forwarding
+  const handleOpenForwardModal = (message) => {
+    setForwardModalState({
+      isOpen: true,
+      message
+    });
+  };
+
+  // 13. Pin / Unpin Actions
+  const handlePinMessage = async (messageId) => {
+    try {
+      const res = await api.post(`/messages/${messageId}/pin`);
+      const pinnedMsg = res.data?.data?.message;
+      toast.success('Message pinned');
+      if (pinnedMsg) {
+        setMessages((prev) =>
+          prev.map((m) => (m._id === messageId ? { ...m, pinned: true, pinnedBy: pinnedMsg.pinnedBy } : m))
+        );
+        if (selectedUser) fetchPinnedMessages(selectedUser._id);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to pin message');
+    }
+  };
+
+  const handleUnpinMessage = async (messageId) => {
+    try {
+      await api.post(`/messages/${messageId}/unpin`);
+      toast.success('Message unpinned');
+      setMessages((prev) =>
+        prev.map((m) => (m._id === messageId ? { ...m, pinned: false, pinnedBy: null } : m))
+      );
+      if (selectedUser) fetchPinnedMessages(selectedUser._id);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to unpin message');
+    }
+  };
+
+  // 14. Star / Unstar Actions
+  const handleStarMessage = async (messageId) => {
+    try {
+      await api.post(`/messages/${messageId}/star`);
+      toast.success('Message starred');
+      fetchStarredMessages();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to star message');
+    }
+  };
+
+  const handleUnstarMessage = async (messageId) => {
+    try {
+      await api.delete(`/messages/${messageId}/star`);
+      toast.success('Message unstarred');
+      fetchStarredMessages();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to unstar message');
+    }
+  };
+
+  // 15. Navigate to Starred Message in Context
+  const handleSelectStarredMessage = async ({ otherParticipant, messageId, conversationId }) => {
+    if (!otherParticipant) return;
+
+    // Switch selected user if not active
+    if (!selectedUser || selectedUser._id !== otherParticipant._id) {
+      setSelectedUser(otherParticipant);
+      await fetchMessages(otherParticipant._id, 1, false);
+      await fetchPinnedMessages(otherParticipant._id);
+      markAsRead(otherParticipant._id);
+    }
+
+    // Scroll to message in thread
+    setTimeout(() => {
+      const el = document.getElementById(`message-${messageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 200);
+  };
+
+  // 16. Typing Indicators
   const handleTyping = () => {
     if (socket && selectedUser) {
       socket.emit('typing', { receiverId: selectedUser._id });
@@ -219,7 +345,7 @@ export const Chat = () => {
     }
   };
 
-  // 11. Request Management Handlers
+  // 17. Request Management Handlers
   const handleAcceptRequest = async (requestId) => {
     setRequestActionLoading((prev) => ({ ...prev, [requestId]: true }));
     try {
@@ -267,7 +393,7 @@ export const Chat = () => {
     }
   };
 
-  // 12. Clear and Delete Chat Handlers
+  // 18. Clear and Delete Chat Handlers
   const triggerClearChatModal = () => {
     if (!selectedUser) return;
     setModalConfig({
@@ -281,11 +407,13 @@ export const Chat = () => {
           setModalLoading(true);
           await api.delete(`/messages/${selectedUser._id}/clear`);
           setMessages([]);
+          setPinnedMessages([]);
           toast.success('Chat messages cleared');
           if (socket) {
             socket.emit('clear_chat', { receiverId: selectedUser._id });
           }
           fetchConversations();
+          fetchStarredMessages();
           setModalConfig((prev) => ({ ...prev, isOpen: false }));
         } catch (err) {
           toast.error(err.response?.data?.message || 'Failed to clear chat');
@@ -301,7 +429,7 @@ export const Chat = () => {
     setModalConfig({
       isOpen: true,
       title: 'Delete Conversation?',
-      message: `Are you sure you want to delete your conversation with ${selectedUser.username}? All messages and conversation records will be removed.`,
+      message: `Are you sure you want to delete your conversation with ${selectedUser.username}? All messages and records will be removed.`,
       confirmText: 'Delete Conversation',
       isDanger: true,
       action: async () => {
@@ -309,12 +437,14 @@ export const Chat = () => {
           setModalLoading(true);
           await api.delete(`/messages/${selectedUser._id}`);
           setMessages([]);
+          setPinnedMessages([]);
           setSelectedUser(null);
           toast.success('Conversation deleted');
           if (socket) {
             socket.emit('delete_chat', { receiverId: selectedUser._id });
           }
           fetchConversations();
+          fetchStarredMessages();
           setModalConfig((prev) => ({ ...prev, isOpen: false }));
         } catch (err) {
           toast.error(err.response?.data?.message || 'Failed to delete conversation');
@@ -337,7 +467,9 @@ export const Chat = () => {
           setModalLoading(true);
           await api.delete('/messages/clear-all');
           setMessages([]);
+          setPinnedMessages([]);
           setConversations([]);
+          setStarredMessages([]);
           setSelectedUser(null);
           toast.success('All conversations cleared');
           if (socket) {
@@ -368,6 +500,7 @@ export const Chat = () => {
           toast.success(`Removed ${selectedUser.username} from contacts`);
           setSelectedUser(null);
           setMessages([]);
+          setPinnedMessages([]);
           fetchFriends();
           fetchConversations();
           setModalConfig((prev) => ({ ...prev, isOpen: false }));
@@ -380,7 +513,7 @@ export const Chat = () => {
     });
   };
 
-  // 13. Socket Event Listeners (including real-time edit, delete, reaction sync)
+  // 19. Socket Event Listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -427,22 +560,56 @@ export const Chat = () => {
       fetchConversations();
     };
 
+    // Real-Time Message Pinned
+    const handleMessagePinned = ({ message, conversationId }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === message._id ? { ...m, pinned: true, pinnedBy: message.pinnedBy } : m))
+      );
+      if (selectedUser) {
+        fetchPinnedMessages(selectedUser._id);
+      }
+    };
+
+    // Real-Time Message Unpinned
+    const handleMessageUnpinned = ({ messageId, conversationId }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === messageId ? { ...m, pinned: false, pinnedBy: null } : m))
+      );
+      if (selectedUser) {
+        fetchPinnedMessages(selectedUser._id);
+      }
+    };
+
+    // Real-Time Message Starred (User's private socket)
+    const handleMessageStarred = () => {
+      fetchStarredMessages();
+    };
+
+    // Real-Time Message Unstarred
+    const handleMessageUnstarred = () => {
+      fetchStarredMessages();
+    };
+
     // Real-Time Message Edited
     const handleMessageEdited = ({ message }) => {
       setMessages((prev) =>
         prev.map((m) => (m._id === message._id ? { ...m, ...message } : m))
       );
+      if (selectedUser) fetchPinnedMessages(selectedUser._id);
       fetchConversations();
+      fetchStarredMessages();
     };
 
     // Real-Time Message Deleted
     const handleMessageDeleted = ({ messageId, message }) => {
       setMessages((prev) =>
         prev.map((m) =>
-          m._id === messageId ? { ...m, deleted: true, text: '', deletedAt: new Date() } : m
+          m._id === messageId ? { ...m, deleted: true, text: '', deletedAt: new Date(), pinned: false } : m
         )
       );
+      if (selectedUser) fetchPinnedMessages(selectedUser._id);
       fetchConversations();
+      fetchStarredMessages();
     };
 
     // Real-Time Reaction Updated
@@ -494,8 +661,10 @@ export const Chat = () => {
     const handleChatCleared = ({ clearedBy }) => {
       if (selectedUser && (selectedUser._id === clearedBy || currentUser._id === clearedBy)) {
         setMessages([]);
+        setPinnedMessages([]);
       }
       fetchConversations();
+      fetchStarredMessages();
     };
 
     // Chat Deleted
@@ -503,19 +672,28 @@ export const Chat = () => {
       if (selectedUser && (selectedUser._id === deletedBy || currentUser._id === deletedBy)) {
         setSelectedUser(null);
         setMessages([]);
+        setPinnedMessages([]);
       }
       fetchConversations();
+      fetchStarredMessages();
     };
 
     // All Chats Cleared
     const handleAllChatsCleared = () => {
       setSelectedUser(null);
       setMessages([]);
+      setPinnedMessages([]);
       setConversations([]);
+      setStarredMessages([]);
     };
 
     socket.on('receive_message', handleReceiveMessage);
+    socket.on('new_message', handleReceiveMessage);
     socket.on('message_sent', handleMessageSent);
+    socket.on('message_pinned', handleMessagePinned);
+    socket.on('message_unpinned', handleMessageUnpinned);
+    socket.on('message_starred', handleMessageStarred);
+    socket.on('message_unstarred', handleMessageUnstarred);
     socket.on('message_edited', handleMessageEdited);
     socket.on('message_deleted', handleMessageDeleted);
     socket.on('message_reaction_updated', handleReactionUpdated);
@@ -530,7 +708,12 @@ export const Chat = () => {
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
+      socket.off('new_message', handleReceiveMessage);
       socket.off('message_sent', handleMessageSent);
+      socket.off('message_pinned', handleMessagePinned);
+      socket.off('message_unpinned', handleMessageUnpinned);
+      socket.off('message_starred', handleMessageStarred);
+      socket.off('message_unstarred', handleMessageUnstarred);
       socket.off('message_edited', handleMessageEdited);
       socket.off('message_deleted', handleMessageDeleted);
       socket.off('message_reaction_updated', handleReactionUpdated);
@@ -543,28 +726,18 @@ export const Chat = () => {
       socket.off('delete_chat', handleChatDeleted);
       socket.off('all_chats_cleared', handleAllChatsCleared);
     };
-  }, [socket, selectedUser, currentUser._id, friends, markAsRead, fetchConversations, fetchFriends, fetchRequests]);
-
-  // Filter friends based on search query
-  const filteredFriends = friends.filter((f) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      f.username.toLowerCase().includes(query) ||
-      f.email?.toLowerCase().includes(query)
-    );
-  });
+  }, [socket, selectedUser, currentUser._id, friends, markAsRead, fetchConversations, fetchFriends, fetchRequests, fetchPinnedMessages, fetchStarredMessages]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-slate-50 dark:bg-[#031714] transition-colors duration-200">
+    <div className="h-screen w-screen overflow-hidden flex bg-transparent transition-colors duration-200 relative">
       {/* Sidebar: Columns 1 & 2 (visible on desktop or mobile when no chat is open) */}
       <div
         className={`${
           selectedUser ? 'hidden md:flex' : 'flex'
-        } w-full md:w-auto h-full flex-shrink-0`}
+        } w-full md:w-auto h-full flex-shrink-0 z-20`}
       >
         <Sidebar
-          friends={filteredFriends}
+          friends={friends}
           conversations={conversations}
           selectedUser={selectedUser}
           onSelectUser={handleSelectUser}
@@ -580,6 +753,10 @@ export const Chat = () => {
           onCancelRequest={handleCancelRequest}
           loadingRequests={loadingRequests}
           requestActionLoading={requestActionLoading}
+          starredMessages={starredMessages}
+          loadingStarred={loadingStarred}
+          onUnstarMessage={handleUnstarMessage}
+          onSelectStarredMessage={handleSelectStarredMessage}
         />
       </div>
 
@@ -587,11 +764,13 @@ export const Chat = () => {
       <div
         className={`${
           !selectedUser ? 'hidden md:flex' : 'flex'
-        } flex-1 h-full min-w-0`}
+        } flex-1 h-full min-w-0 relative z-10`}
       >
         <ChatWindow
           selectedUser={selectedUser}
           messages={messages}
+          pinnedMessages={pinnedMessages}
+          starredMessageIds={starredMessageIds}
           onSendMessage={handleSendMessage}
           onTyping={handleTyping}
           onStopTyping={handleStopTyping}
@@ -607,8 +786,26 @@ export const Chat = () => {
           onEditMessage={handleEditMessage}
           onDeleteMessage={handleDeleteMessage}
           onToggleReaction={handleToggleReaction}
+          onForwardMessage={handleOpenForwardModal}
+          onPinMessage={handlePinMessage}
+          onUnpinMessage={handleUnpinMessage}
+          onStarMessage={handleStarMessage}
+          onUnstarMessage={handleUnstarMessage}
         />
       </div>
+
+      {/* Message Forwarding Modal */}
+      <ForwardModal
+        isOpen={forwardModalState.isOpen}
+        onClose={() => setForwardModalState({ isOpen: false, message: null })}
+        message={forwardModalState.message}
+        friends={friends}
+        conversations={conversations}
+        onForwardSuccess={() => {
+          fetchConversations();
+          if (selectedUser) fetchMessages(selectedUser._id, 1, false);
+        }}
+      />
 
       {/* Add Friend / Search Users Modal */}
       <AddFriendModal
