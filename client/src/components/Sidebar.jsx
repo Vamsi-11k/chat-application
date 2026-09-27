@@ -90,7 +90,7 @@ export const Sidebar = ({
         {/* Top: Logo & Navigation Items */}
         <div className="flex flex-col items-center space-y-6">
           <div
-            title="PulseChat"
+            title="NexChat"
             className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-lg shadow-teal-600/30"
           >
             <MessagesSquare size={20} className="stroke-[2.2]" />

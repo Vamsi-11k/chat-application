@@ -247,10 +247,11 @@ export const Landing = () => {
         {/* ----------------------------------------------------------------------- */}
         <header className="w-full px-6 sm:px-10 py-5 flex items-center justify-between border-b border-emerald-100/80 dark:border-[#0d332c]/80 relative z-20">
           {/* Brand Logo */}
-          <Link to="/" aria-label="Home" className="flex items-center group">
+          <Link to="/" aria-label="NexChat Home" className="flex items-center space-x-2.5 group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/30 group-hover:scale-105 transition-transform">
               <MessageSquare size={22} className="stroke-[2.2]" />
             </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">NexChat</span>
           </Link>
 
           {/* Minimal Nav Controls */}
@@ -382,12 +383,12 @@ export const Landing = () => {
                 {useScreenshotImage ? (
                   <img
                     src="/assets/hero-phone-preview.png"
-                    alt="PulseChat App Live Interface"
+                    alt="NexChat App Live Interface"
                     className="w-full h-full object-cover"
                     onError={() => setUseScreenshotImage(false)}
                   />
                 ) : (
-                  /* Animated Live Interactive Mockup of PulseChat */
+                  /* Animated Live Interactive Mockup of NexChat */
                   <div className="w-full h-full flex flex-col justify-between text-xs select-none">
                     
                     {/* Mockup Header */}
@@ -518,7 +519,7 @@ export const Landing = () => {
       {/* ========================================================================= */}
       <footer className="w-full max-w-7xl mx-auto mt-4 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-teal-950/80 dark:text-teal-200/60 font-medium">
         <div className="flex items-center space-x-2">
-          <span className="font-bold text-teal-950 dark:text-teal-100">PulseChat</span>
+          <span className="font-bold text-teal-950 dark:text-teal-100">NexChat</span>
           <span>•</span>
           <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
         </div>
