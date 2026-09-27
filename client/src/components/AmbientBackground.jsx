@@ -1,14 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { ElementsCollection } from '../shaders/elements/ElementsBackground';
-import '../shaders/threeui.css';
 
 export const AmbientBackground = () => {
-  const { effectsEnabled, ambientVariant, theme, isDark } = useTheme();
+  const { effectsEnabled, theme, isDark } = useTheme();
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (!effectsEnabled || ambientVariant !== 'aurora') return;
+    if (!effectsEnabled) return;
 
     // Check prefers-reduced-motion
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -199,31 +197,9 @@ export const AmbientBackground = () => {
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [effectsEnabled, ambientVariant, theme, isDark]);
+  }, [effectsEnabled, theme, isDark]);
 
   if (!effectsEnabled) return null;
-
-  // Render ThreeUI ElementsCollection (Water variant)
-  if (ambientVariant === 'water') {
-    return (
-      <div 
-        aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-[1] w-full h-full overflow-hidden select-none opacity-60 dark:opacity-85 transition-opacity duration-700"
-      >
-        <ElementsCollection
-          variant="water"
-          speed={1.00}
-          size={1.00}
-          particleAmount={1.00}
-          hue={theme === 'anime' ? 140 : theme === 'nostalgic' ? -35 : 0}
-          saturation={1.00}
-          brightness={isDark ? 0.95 : 1.15}
-          opacity={0.85}
-          className="w-full h-full pointer-events-none"
-        />
-      </div>
-    );
-  }
 
   // Render Aurora Orbs Canvas
   return (

@@ -3,23 +3,111 @@
 @tailwind utilities;
 
 :root {
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --accent: #0284c7;
-  --grad-1: #0d9488;
-  --grad-2: #0284c7;
+  --color-accent: #0d9488;
+  --color-accent-hover: #0f766e;
+  --color-accent-muted: rgba(13, 148, 136, 0.16);
+  --color-accent-subtle: rgba(13, 148, 136, 0.08);
+  --color-accent-border: rgba(13, 148, 136, 0.35);
+  --color-accent-contrast: #ffffff;
+  --color-accent-glow: rgba(13, 148, 136, 0.4);
+
+  --primary: var(--color-accent);
+  --primary-hover: var(--color-accent-hover);
+  --accent: var(--color-accent);
+  --grad-1: var(--color-accent);
+  --grad-2: var(--color-accent-hover);
   --grad-3: #14b8a6;
-  --grad-glow: rgba(13, 148, 136, 0.35);
+  --grad-glow: var(--color-accent-glow);
 }
 
 .dark {
-  --primary: #0d9488;
-  --primary-hover: #14b8a6;
-  --accent: #10b981;
-  --grad-1: #0d9488;
-  --grad-2: #10b981;
+  --color-accent: #0d9488;
+  --color-accent-hover: #14b8a6;
+  --color-accent-muted: rgba(13, 148, 136, 0.2);
+  --color-accent-subtle: rgba(13, 148, 136, 0.1);
+  --color-accent-border: rgba(13, 148, 136, 0.4);
+  --color-accent-contrast: #ffffff;
+  --color-accent-glow: rgba(45, 212, 191, 0.45);
+
+  --primary: var(--color-accent);
+  --primary-hover: var(--color-accent-hover);
+  --accent: var(--color-accent);
+  --grad-1: var(--color-accent);
+  --grad-2: var(--color-accent-hover);
   --grad-3: #2dd4bf;
-  --grad-glow: rgba(45, 212, 191, 0.45);
+  --grad-glow: var(--color-accent-glow);
+}
+
+/* ==========================================================================
+   CENTRALIZED ACCENT COLOR UTILITIES
+   Binds all accent/teal UI tokens directly to CSS custom properties
+   ========================================================================== */
+.bg-teal-600,
+.bg-teal-500 {
+  background-color: var(--color-accent) !important;
+}
+
+.hover\:bg-teal-500:hover,
+.hover\:bg-teal-600:hover {
+  background-color: var(--color-accent-hover) !important;
+}
+
+.text-teal-600,
+.text-teal-500,
+.text-teal-400,
+.dark\:text-teal-400,
+.dark\:text-teal-300,
+.dark\:text-teal-200,
+.dark\:text-teal-100 {
+  color: var(--color-accent) !important;
+}
+
+.hover\:text-teal-600:hover,
+.dark\:hover\:text-teal-300:hover,
+.dark\:hover\:text-teal-400:hover {
+  color: var(--color-accent-hover) !important;
+}
+
+.border-teal-500,
+.border-teal-600,
+.focus\:border-teal-500:focus,
+.dark\:focus\:border-teal-400:focus {
+  border-color: var(--color-accent) !important;
+}
+
+.border-teal-100,
+.border-teal-200,
+.border-teal-100\/80,
+.border-teal-100\/60 {
+  border-color: var(--color-accent-border) !important;
+}
+
+.bg-teal-50,
+.bg-teal-50\/80,
+.bg-teal-500\/10,
+.bg-teal-500\/15,
+.bg-teal-500\/20,
+.bg-teal-600\/15,
+.dark\:bg-teal-400\/15,
+.dark\:bg-teal-950\/40,
+.dark\:bg-teal-950\/80 {
+  background-color: var(--color-accent-muted) !important;
+}
+
+.shadow-teal-600\/35,
+.shadow-teal-600\/30,
+.shadow-teal-600\/25,
+.shadow-teal-600\/20,
+.shadow-teal-600\/15 {
+  --tw-shadow-color: var(--color-accent-glow) !important;
+  box-shadow: 0 10px 25px -5px var(--color-accent-glow) !important;
+}
+
+.focus-visible\:ring-teal-500:focus-visible,
+.focus\:ring-teal-500:focus,
+.ring-teal-400,
+.dark\:ring-teal-300 {
+  --tw-ring-color: var(--color-accent) !important;
 }
 
 @layer base {
@@ -343,38 +431,7 @@
   --tw-gradient-from: rgba(236, 72, 153, 0.25) !important;
 }
 
-/* Anime Primary Colors & Buttons */
-[data-theme="anime"] .bg-teal-600,
-[data-theme="anime"] .bg-teal-500 {
-  background-color: #ec4899 !important;
-}
-
-[data-theme="anime"] .hover\:bg-teal-500:hover,
-[data-theme="anime"] .hover\:bg-teal-600:hover {
-  background-color: #db2777 !important;
-}
-
-[data-theme="anime"] .text-teal-600,
-[data-theme="anime"] .text-teal-500,
-[data-theme="anime"] .dark\:text-teal-400,
-[data-theme="anime"] .dark\:text-teal-300,
-[data-theme="anime"] .dark\:text-teal-100 {
-  color: #f472b6 !important;
-}
-
-[data-theme="anime"] .hover\:text-teal-600:hover,
-[data-theme="anime"] .dark\:hover\:text-teal-300:hover,
-[data-theme="anime"] .dark\:hover\:text-teal-400:hover {
-  color: #fb7185 !important;
-}
-
-[data-theme="anime"] .border-teal-500,
-[data-theme="anime"] .border-teal-600,
-[data-theme="anime"] .focus\:border-teal-500:focus,
-[data-theme="anime"] .dark\:focus\:border-teal-400:focus {
-  border-color: #ec4899 !important;
-}
-
+/* Anime Primary Colors & Buttons - Inherits dynamic var(--color-accent) */
 [data-theme="anime"] .dark\:border-\[\#092b26\],
 [data-theme="anime"] .dark\:border-\[\#0f3d37\],
 [data-theme="anime"] .dark\:border-\[\#0e3831\],
@@ -391,22 +448,14 @@
   border-color: #4c1d78 !important;
 }
 
-[data-theme="anime"] .shadow-teal-600\/30,
-[data-theme="anime"] .shadow-teal-600\/35,
-[data-theme="anime"] .shadow-teal-600\/25,
-[data-theme="anime"] .shadow-teal-600\/20 {
-  --tw-shadow-color: rgba(236, 72, 153, 0.4) !important;
-  box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.35) !important;
-}
-
 [data-theme="anime"] .dark\:from-teal-400 {
-  --tw-gradient-from: #f472b6 !important;
+  --tw-gradient-from: var(--color-accent) !important;
 }
 [data-theme="anime"] .dark\:via-emerald-300 {
   --tw-gradient-stops: var(--tw-gradient-from), #c084fc, var(--tw-gradient-to) !important;
 }
 [data-theme="anime"] .dark\:to-teal-300 {
-  --tw-gradient-to: #ec4899 !important;
+  --tw-gradient-to: var(--color-accent) !important;
 }
 
 
@@ -414,14 +463,14 @@
    NOSTALGIC THEME (Retro Synthwave & 90s Cyber Arcade)
    ========================================================================== */
 [data-theme="nostalgic"] {
-  --primary: #06b6d4;
+  --primary: var(--color-accent);
   --accent: #f59e0b;
   --secondary: #ec4899;
-  --glow: rgba(6, 182, 212, 0.4);
-  --grad-1: #06b6d4;
+  --glow: var(--color-accent-glow);
+  --grad-1: var(--color-accent);
   --grad-2: #f59e0b;
   --grad-3: #ec4899;
-  --grad-glow: rgba(6, 182, 212, 0.5);
+  --grad-glow: var(--color-accent-glow);
 }
 
 /* Nostalgic Backgrounds & Gradients */
@@ -498,41 +547,10 @@
 
 [data-theme="nostalgic"] .from-teal-500\/15,
 [data-theme="nostalgic"] .from-teal-500\/10 {
-  --tw-gradient-from: rgba(6, 182, 212, 0.25) !important;
+  --tw-gradient-from: var(--color-accent-muted) !important;
 }
 
-/* Nostalgic Primary Cyber Cyan & Sunset Amber */
-[data-theme="nostalgic"] .bg-teal-600,
-[data-theme="nostalgic"] .bg-teal-500 {
-  background-color: #06b6d4 !important;
-}
-
-[data-theme="nostalgic"] .hover\:bg-teal-500:hover,
-[data-theme="nostalgic"] .hover\:bg-teal-600:hover {
-  background-color: #0891b2 !important;
-}
-
-[data-theme="nostalgic"] .text-teal-600,
-[data-theme="nostalgic"] .text-teal-500,
-[data-theme="nostalgic"] .dark\:text-teal-400,
-[data-theme="nostalgic"] .dark\:text-teal-300,
-[data-theme="nostalgic"] .dark\:text-teal-100 {
-  color: #22d3ee !important;
-}
-
-[data-theme="nostalgic"] .hover\:text-teal-600:hover,
-[data-theme="nostalgic"] .dark\:hover\:text-teal-300:hover,
-[data-theme="nostalgic"] .dark\:hover\:text-teal-400:hover {
-  color: #f59e0b !important;
-}
-
-[data-theme="nostalgic"] .border-teal-500,
-[data-theme="nostalgic"] .border-teal-600,
-[data-theme="nostalgic"] .focus\:border-teal-500:focus,
-[data-theme="nostalgic"] .dark\:focus\:border-teal-400:focus {
-  border-color: #06b6d4 !important;
-}
-
+/* Nostalgic Primary Borders & Highlights */
 [data-theme="nostalgic"] .dark\:border-\[\#092b26\],
 [data-theme="nostalgic"] .dark\:border-\[\#0f3d37\],
 [data-theme="nostalgic"] .dark\:border-\[\#0e3831\],
@@ -549,14 +567,6 @@
   border-color: #3b2875 !important;
 }
 
-[data-theme="nostalgic"] .shadow-teal-600\/30,
-[data-theme="nostalgic"] .shadow-teal-600\/35,
-[data-theme="nostalgic"] .shadow-teal-600\/25,
-[data-theme="nostalgic"] .shadow-teal-600\/20 {
-  --tw-shadow-color: rgba(6, 182, 212, 0.4) !important;
-  box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.35) !important;
-}
-
 [data-theme="nostalgic"] .dark\:from-teal-400 {
   --tw-gradient-from: #f59e0b !important;
 }
@@ -564,5 +574,5 @@
   --tw-gradient-stops: var(--tw-gradient-from), #ec4899, var(--tw-gradient-to) !important;
 }
 [data-theme="nostalgic"] .dark\:to-teal-300 {
-  --tw-gradient-to: #06b6d4 !important;
+  --tw-gradient-to: var(--color-accent) !important;
 }

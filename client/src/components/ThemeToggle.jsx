@@ -1,6 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Sun, Moon, Sparkles, Gamepad2, Check, Palette, Wand2, Droplets, Flame } from 'lucide-react';
-import { useTheme, THEMES, AMBIENT_EFFECTS } from '../context/ThemeContext';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import {
+  Sun,
+  Moon,
+  Sparkles,
+  Gamepad2,
+  Check,
+  Palette,
+  Wand2,
+  RotateCcw,
+  Sliders,
+  ShieldCheck
+} from 'lucide-react';
+import {
+  useTheme,
+  THEMES,
+  CURATED_ACCENTS,
+  hexToRgb,
+  rgbToHsl,
+  hslToHex,
+  clampAccentForContrast
+} from '../context/ThemeContext';
 
 export const ThemeToggle = ({
   className = '',
@@ -9,13 +28,43 @@ export const ThemeToggle = ({
   align = 'right', // 'right' | 'left'
   direction = 'bottom' // 'bottom' | 'top'
 }) => {
-  const { theme, setTheme, effectsEnabled, toggleEffects, ambientVariant, setAmbientVariant, ambientEffects } = useTheme();
+  const {
+    theme,
+    setTheme,
+    isDark,
+    currentAccent,
+    isCustomAccent,
+    setThemeAccent,
+    resetThemeAccent,
+    curatedAccents = CURATED_ACCENTS,
+    defaultAccents,
+    effectsEnabled,
+    toggleEffects,
+    ambientVariant,
+    setAmbientVariant
+  } = useTheme();
+
   const [isOpen, setIsOpen] = useState(false);
+  const [showCustomHue, setShowCustomHue] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Derive active hue (0-360) from current accent
+  const currentHue = useMemo(() => {
+    const rgb = hexToRgb(currentAccent);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    return hsl.h;
+  }, [currentAccent]);
+
+  const [hueValue, setHueValue] = useState(currentHue);
+
+  // Sync internal hue slider when theme or currentAccent changes
+  useEffect(() => {
+    setHueValue(currentHue);
+  }, [currentHue, theme]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = event => {
+    const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
@@ -47,6 +96,7 @@ export const ThemeToggle = ({
   }, [isOpen]);
 
   const currentThemeObj = THEMES.find((t) => t.id === theme) || THEMES[0];
+  const defaultAccentForTheme = defaultAccents?.[theme] || '#0d9488';
 
   const renderIcon = (iconName, iconSize = size) => {
     switch (iconName) {
@@ -63,14 +113,28 @@ export const ThemeToggle = ({
     }
   };
 
+  const handleHueChange = (e) => {
+    const newHue = parseInt(e.target.value, 10);
+    setHueValue(newHue);
+    // Lightness clamped for guaranteed text contrast
+    const targetL = isDark ? 52 : 42;
+    const rawHex = hslToHex(newHue, 85, targetL);
+    const safeHex = clampAccentForContrast(rawHex, isDark);
+    setThemeAccent(safeHex);
+  };
+
+  const isCurrentAccentInCurated = curatedAccents.some(
+    (c) => c.hex.toLowerCase() === currentAccent.toLowerCase()
+  );
+
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       {/* Main Toggle / Picker Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        title={`Current theme: ${currentThemeObj.name}. Click to change theme or effects.`}
-        aria-label={`Current theme: ${currentThemeObj.name}. Click to change theme or effects.`}
+        title={`Current theme: ${currentThemeObj.name}. Click to change theme, accent color, or effects.`}
+        aria-label={`Current theme: ${currentThemeObj.name}. Click to change theme, accent color, or effects.`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         className={`relative inline-flex items-center justify-center p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-[#092a25] transition-all duration-200 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${className}`}
@@ -79,6 +143,12 @@ export const ThemeToggle = ({
           {renderIcon(currentThemeObj.icon, size)}
           {effectsEnabled && (
             <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-400 animate-ping" />
+          )}
+          {isCustomAccent && !effectsEnabled && (
+            <span
+              className="absolute -top-1 -right-1 w-2 h-2 rounded-full border border-white dark:border-[#09211d]"
+              style={{ backgroundColor: currentAccent }}
+            />
           )}
         </div>
 
@@ -89,23 +159,25 @@ export const ThemeToggle = ({
         )}
       </button>
 
-      {/* Floating Theme Selection & Effects Dropdown Menu */}
+      {/* Floating Theme Selection & Settings Dropdown Menu */}
       {isOpen && (
         <div
           role="listbox"
           aria-label="Theme selector"
-          className={`absolute z-50 w-64 p-2.5 rounded-2xl bg-white/95 dark:bg-[#09211d]/95 backdrop-blur-xl border border-teal-100 dark:border-[#103a33] shadow-2xl shadow-slate-950/20 dark:shadow-black/60 animate-scaleUp ${
+          className={`absolute z-50 w-72 sm:w-80 max-h-[85vh] overflow-y-auto p-3 rounded-2xl bg-white/95 dark:bg-[#09211d]/95 backdrop-blur-xl border border-teal-100 dark:border-[#103a33] shadow-2xl shadow-slate-950/20 dark:shadow-black/60 animate-scaleUp scrollbar-thin ${
             direction === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
           } ${align === 'left' ? 'left-0' : 'right-0'}`}
         >
-          {/* Theme Section Header */}
-          <div className="px-2.5 py-1.5 mb-1 border-b border-slate-100 dark:border-[#133e37] flex items-center justify-between">
+          {/* ================================================================= */}
+          {/* SECTION 1: THEME STYLE (4 PRESETS)                                */}
+          {/* ================================================================= */}
+          <div className="px-1 py-1 mb-1 border-b border-slate-100 dark:border-[#133e37] flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-teal-400/80 flex items-center space-x-1.5">
               <Palette size={12} className="inline mr-1" />
               Theme Style
             </span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#0d2e28] text-slate-500 dark:text-teal-300 font-medium">
-              4 Options
+              4 Presets
             </span>
           </div>
 
@@ -165,8 +237,130 @@ export const ThemeToggle = ({
             })}
           </div>
 
-          {/* Ambient Effects Section Divider */}
-          <div className="pt-2 mt-2 border-t border-slate-100 dark:border-[#133e37]">
+          {/* ================================================================= */}
+          {/* SECTION 2: ACCENT COLOR PERSONALIZATION                           */}
+          {/* ================================================================= */}
+          <div className="pt-2.5 mt-2.5 border-t border-slate-100 dark:border-[#133e37]">
+            <div className="px-1 py-1 mb-2 flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-teal-400/80 flex items-center space-x-1.5">
+                <Sliders size={12} className="inline mr-1" />
+                Accent Hue
+              </span>
+
+              {/* Reset to Default Button */}
+              {isCustomAccent ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetThemeAccent();
+                    setShowCustomHue(false);
+                  }}
+                  className="text-[10px] text-teal-600 dark:text-teal-300 hover:underline flex items-center space-x-1 font-medium bg-teal-50 dark:bg-teal-950/50 px-1.5 py-0.5 rounded-md transition-colors"
+                  title="Revert to preset default accent for this theme"
+                >
+                  <RotateCcw size={10} className="mr-0.5" />
+                  Reset default
+                </button>
+              ) : (
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                  Default: {defaultAccentForTheme}
+                </span>
+              )}
+            </div>
+
+            {/* Curated Swatches Grid */}
+            <div className="grid grid-cols-6 gap-2 px-1 py-1">
+              {curatedAccents.map((swatch) => {
+                const isSelected =
+                  currentAccent.toLowerCase() === swatch.hex.toLowerCase();
+                return (
+                  <button
+                    key={swatch.id}
+                    type="button"
+                    title={`${swatch.name} (${swatch.hex})`}
+                    aria-label={`Select ${swatch.name} accent`}
+                    onClick={() => {
+                      setThemeAccent(swatch.hex);
+                    }}
+                    className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 transform hover:scale-115 active:scale-95 shadow-sm ${
+                      isSelected
+                        ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#09211d] ring-slate-800 dark:ring-white scale-105'
+                        : 'hover:opacity-90'
+                    }`}
+                    style={{ backgroundColor: swatch.hex }}
+                  >
+                    {isSelected && (
+                      <Check size={14} className="text-white drop-shadow-md stroke-[3]" />
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Custom Hue Toggle Swatch */}
+              <button
+                type="button"
+                title="Custom Hue Slider"
+                aria-label="Open custom hue slider"
+                onClick={() => setShowCustomHue((prev) => !prev)}
+                className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 transform hover:scale-115 active:scale-95 shadow-sm border border-slate-200 dark:border-slate-700 ${
+                  showCustomHue || (!isCurrentAccentInCurated && isCustomAccent)
+                    ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#09211d] ring-teal-500 scale-105'
+                    : ''
+                }`}
+                style={{
+                  background:
+                    'conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
+                }}
+              >
+                <span className="w-5 h-5 rounded-full bg-white dark:bg-[#09211d] flex items-center justify-center shadow-xs">
+                  <Sliders size={11} className="text-slate-700 dark:text-slate-200" />
+                </span>
+              </button>
+            </div>
+
+            {/* Custom Hue Slider & Contrast Safeguard Area */}
+            {showCustomHue && (
+              <div className="mt-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-[#071d19]/80 border border-slate-200/80 dark:border-[#14423a] space-y-2 animate-fadeIn">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-slate-700 dark:text-slate-200 flex items-center">
+                    <span
+                      className="w-3 h-3 rounded-full inline-block mr-1.5 shadow-xs border border-white/50"
+                      style={{ backgroundColor: currentAccent }}
+                    />
+                    Custom Hue ({hueValue}°)
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                    {currentAccent.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* 0-360° Hue Slider */}
+                <input
+                  type="range"
+                  min="0"
+                  max="360"
+                  value={hueValue}
+                  onChange={handleHueChange}
+                  className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none"
+                  style={{
+                    background:
+                      'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
+                  }}
+                />
+
+                {/* Contrast Safeguard Notice */}
+                <div className="flex items-center space-x-1.5 text-[10px] text-slate-500 dark:text-teal-400/80 pt-0.5">
+                  <ShieldCheck size={12} className="text-teal-500 shrink-0" />
+                  <span>Auto-clamped for WCAG AA contrast & readability</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ================================================================= */}
+          {/* SECTION 3: AMBIENT VISUAL EFFECTS                                 */}
+          {/* ================================================================= */}
+          <div className="pt-2.5 mt-2.5 border-t border-slate-100 dark:border-[#133e37]">
             <button
               type="button"
               onClick={() => toggleEffects()}
@@ -187,9 +381,9 @@ export const ThemeToggle = ({
                   <Wand2 size={15} className={effectsEnabled ? 'animate-pulse' : ''} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs leading-tight">Ambient Effects</span>
+                  <span className="text-xs leading-tight">Ambient Aurora Glow</span>
                   <span className="text-[10px] text-slate-400 font-normal leading-tight">
-                    {effectsEnabled ? 'Decorative background active' : 'Turn on animated background'}
+                    {effectsEnabled ? 'Floating orbs active' : 'Decorative animated backdrop'}
                   </span>
                 </div>
               </div>
@@ -207,58 +401,10 @@ export const ThemeToggle = ({
                 />
               </div>
             </button>
-
-            {/* Sub-options for Ambient Effect Variant when Enabled */}
-            {effectsEnabled && (
-              <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-[#14423a] space-y-1.5 pl-1 pr-1 animate-fadeIn">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-teal-400/70 px-2">
-                  Select Visual Style
-                </div>
-
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setAmbientVariant('water')}
-                    className={`flex flex-col p-2 rounded-xl border text-left transition-all duration-150 ${
-                      ambientVariant === 'water'
-                        ? 'border-teal-500 bg-teal-500/10 text-teal-800 dark:text-teal-200 shadow-xs font-semibold'
-                        : 'border-slate-200 dark:border-[#14423a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#0d2a25]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1">
-                      <Droplets size={13} className={ambientVariant === 'water' ? 'text-teal-500' : 'text-slate-400'} />
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-teal-500/20 text-teal-600 dark:text-teal-300 font-mono">
-                        ThreeUI
-                      </span>
-                    </div>
-                    <span className="text-[11px] leading-tight font-medium">Elemental Water</span>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-400 mt-0.5">WebGL2 Ripples</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAmbientVariant('aurora')}
-                    className={`flex flex-col p-2 rounded-xl border text-left transition-all duration-150 ${
-                      ambientVariant === 'aurora'
-                        ? 'border-teal-500 bg-teal-500/10 text-teal-800 dark:text-teal-200 shadow-xs font-semibold'
-                        : 'border-slate-200 dark:border-[#14423a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#0d2a25]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1">
-                      <Sparkles size={13} className={ambientVariant === 'aurora' ? 'text-teal-500' : 'text-slate-400'} />
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-teal-500/20 text-teal-600 dark:text-teal-300 font-mono">
-                        2D
-                      </span>
-                    </div>
-                    <span className="text-[11px] leading-tight font-medium">Aurora Glow</span>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-400 mt-0.5">Cosmic Orbs</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
     </div>
   );
 };
+
